@@ -21,6 +21,27 @@
         .asciz "6. Salir\n"
         lenMenu = .- menu
 
+    Opcion:
+        .asciz "Ingrese Una Opcion: "
+        lenOpcion = .- Opcion
+
+    sumaText:
+        .asciz "Ingresando Suma\n"
+        lenSumaText = . - sumaText
+
+    restaText:
+        .asciz "Ingresando Resta\n1"
+        lenRestaText = . - restaText
+
+    multiplicacionText:
+        .asciz "Ingresando Multiplicacion\n"
+        lenMultiplicacionText = . - multiplicacionText
+
+    divisionText:
+        .asciz "Ingresando Division\n"
+        lenDivisionText = . - divisionText
+
+
 .text
 _start:
     mov x0, 1
