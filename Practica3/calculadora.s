@@ -17,7 +17,7 @@
         .asciz "201313965\n"
         lenEncabezado = . - encabezado
 
-    menu:
+    menuPrincipal:
         .asciz ">> Menu Principal\n"
         .asciz "1. Suma\n"
         .asciz "2. Resta\n"
@@ -25,7 +25,7 @@
         .asciz "4. Division\n"
         .asciz "5. Calculo Con Memoria\n"
         .asciz "6. Salir\n"
-        lenMenu = .- menu
+        lenMenu = .- menuPrincipal
 
     Opcion:
         .asciz "Ingrese Una Opcion: "
@@ -50,7 +50,7 @@
 bss
     opcion:
         .space 5 
-        
+
 //metodo print para imprimir en consola
 .macro print texto, cantidad
     MOV x0, 1
@@ -64,7 +64,7 @@ bss
 .macro input
     MOV x0, 0
     LDR x1, =opcion
-    LDR x2, =5
+    LDR x2, =5 //es el tamaño bss .space 5 rservado para la variable de entrada
     MOV x8, 63
     SVC 0
 .endm
@@ -73,6 +73,34 @@ bss
 _start:
     print clear, lenClear //limpia la terminal
     print encabezado, lenEncabezado //muestra mensaje encabezado en la terminal
+    input
+
+    menu:
+        print clear, lenClear //limpia la terminal
+        print menuPrincipal, lenMenu //muestra mensaje menuPrincipal en la terminal
+        print Opcion, lenOpcion //muestra mensaje Ingrese una opcion en la terminal
+        input 
+
+        LDR x10, =opcion //almacena la opcion ingresada en el registro x10
+        LDRB w10, [x10]
+
+        CMP w10, 49   // 49 es en codigo ascii equivale a 1
+        BEQ suma
+
+        CMP w10, 50
+        BEQ resta
+
+        CMP w10, 51
+        BEQ multiplicacion
+
+        CMP w10, 52
+        BEQ division
+
+        CMP w10, 53
+        BEQ operacion_memoria
+
+        CMP w10, 54  // 54 es en codigo ascii que equivale a 6
+        BEQ end
 
     end:
         mov x0, 0   // Codigo de error de la aplicacion -> 0: no hay error
