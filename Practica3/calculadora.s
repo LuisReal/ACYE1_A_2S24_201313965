@@ -10,8 +10,24 @@
         .asciz "Luis Fernando Gonzalez Real\n"
         .asciz "201313965\n"
         lenEncabezado = . - encabezado
+
+    menu:
+        .asciz ">> Menu Principal\n"
+        .asciz "1. Suma\n"
+        .asciz "2. Resta\n"
+        .asciz "3. Multiplicacion\n"
+        .asciz "4. Division\n"
+        .asciz "5. Calculo Con Memoria\n"
+        .asciz "6. Salir\n"
+        lenMenu = .- menu
+
 .text
 _start:
+    mov x0, 1
+    ldr x1, =encabezado
+    ldr x2, =lenEncabezado
+    mov x8, 64
+    svc 0
 
     end:
         mov x0, 0   // Codigo de error de la aplicacion -> 0: no hay error
