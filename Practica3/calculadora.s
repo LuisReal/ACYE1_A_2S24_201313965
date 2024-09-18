@@ -99,8 +99,33 @@ _start:
         CMP w10, 53
         BEQ operacion_memoria
 
-        CMP w10, 54  // 54 es en codigo ascii que equivale a 6
+        CMP w10, 54  // 54 es en codigo ascii que equivale a 6, termina el programa
         BEQ end
+
+        suma:
+            print sumaText, lenSumaText
+            
+            B cont // B = branch incondicional - se va a cont
+
+        resta:
+            print restaText, lenRestaText
+            B cont // B = branch incondicional - se va a cont
+
+        multiplicacion:
+            print multiplicacionText, lenMultiplicacionText
+            B cont // B = branch incondicional - se va a cont
+ 
+        division:
+            print divisionText, lenDivisionText
+            B cont // B = branch incondicional - se va a cont
+        
+        operacion_memoria:
+            print operacionesText, lenOperacionesText
+            B cont // B = branch incondicional - se va a cont
+
+        cont:
+            input
+            B menu // B = branch incondicional - se va a menu, lo cual simula un ciclo while
 
     end:
         mov x0, 0   // Codigo de error de la aplicacion -> 0: no hay error
