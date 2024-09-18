@@ -41,14 +41,28 @@
         .asciz "Ingresando Division\n"
         lenDivisionText = . - divisionText
 
+//metodo print para imprimir en consola
+.macro print texto, cantidad
+    MOV x0, 1
+    LDR x1, =\texto
+    LDR x2, =\cantidad
+    MOV x8, 64        
+    SVC 0 
+.endm
+
+//metodo input para obtener los valores ingresados en la consola
+.macro input
+    MOV x0, 0
+    LDR x1, =opcion
+    LDR x2, =5
+    MOV x8, 63
+    SVC 0
+.endm
 
 .text
 _start:
-    mov x0, 1
-    ldr x1, =encabezado
-    ldr x2, =lenEncabezado
-    mov x8, 64
-    svc 0
+    
+    print encabezado, lenEncabezado
 
     end:
         mov x0, 0   // Codigo de error de la aplicacion -> 0: no hay error
