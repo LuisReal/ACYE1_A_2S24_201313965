@@ -1,6 +1,12 @@
 .global _start
 
 .data
+    
+    //clear es para limpiar la terminal
+    clear:
+        .asciz "\x1B[2J\x1B[H"
+        lenClear = . - clear
+
     encabezado:
         .asciz "Universidad de San Carlos de Guatemala\n"
         .asciz "Facultad de Ingenieria\n"
@@ -41,6 +47,10 @@
         .asciz "Ingresando Division\n"
         lenDivisionText = . - divisionText
 
+bss
+    opcion:
+        .space 5 
+        
 //metodo print para imprimir en consola
 .macro print texto, cantidad
     MOV x0, 1
@@ -61,8 +71,8 @@
 
 .text
 _start:
-    
-    print encabezado, lenEncabezado
+    print clear, lenClear //limpia la terminal
+    print encabezado, lenEncabezado //muestra mensaje encabezado en la terminal
 
     end:
         mov x0, 0   // Codigo de error de la aplicacion -> 0: no hay error
