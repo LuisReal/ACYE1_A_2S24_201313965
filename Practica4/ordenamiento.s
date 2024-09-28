@@ -50,12 +50,42 @@
         .asciz "Ingrese los numeros separados por coma: "
         lenOperacionComa = . - operacionComa
 
+    msgFilename:
+    .asciz "Ingrese el nombre del archivo: "
+    lenMsgFilename = .- msgFilename
+
+    errorOpenFile:
+        .asciz "Error al abrir el archivo\n"
+        lenErrOpenFile = .- errorOpenFile
+
+    readSuccess:
+        .asciz "El Archivo Se Ha Leido Correctamente\n"
+        lenReadSuccess = .- readSuccess
+
 .bss
     opcion:
         .space 5
     
     operacion:
         .space 20   // => Reserva espacion en bytes para operacion
+
+    filename:
+        .zero 50   // reserva bloque de memoria inicializada en ceros
+
+    array:
+        .skip 1024
+
+    count:
+        .zero 8
+
+    num:
+        .space 4
+
+    character:
+        .byte 0
+
+    fileDescriptor:
+        .space 8
 
 //metodo print para imprimir en consola
 .macro print texto, cantidad
@@ -75,6 +105,14 @@
     SVC 0
 .endm
 
+// Macro para leer datos
+.macro read stdin, buffer, len
+    MOV x0, \stdin
+    LDR x1, =\buffer
+    MOV x2, \len
+    MOV x8, 63
+    SVC 0
+.endm
 
 .text
 _start:
