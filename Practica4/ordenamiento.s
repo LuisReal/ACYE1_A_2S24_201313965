@@ -197,3 +197,55 @@ menu:
         MOV x8, 57
         SVC 0
         RET
+
+    readCSV:
+        // codidgo para leer numero y convertir
+        LDR x10, =num    // Buffer para almacenar el numero
+        LDR x11, =fileDescriptor
+        LDR x11, [x11]
+
+        rd_num:
+            read x11, character, 1
+            LDR x4, =character
+            LDRB w3, [x4]
+            CMP w3, 44
+            BEQ rd_cv_num
+
+            MOV x20, x0
+            CBZ x0, rd_cv_num
+
+            STRB w3, [x10], 1
+            B rd_num
+
+        rd_cv_num:
+            LDR x5, =num
+            LDR x8, =num
+            LDR x12, =array
+
+            STP x29, x30, [SP, -16]!
+
+            BL atoi
+
+            LDP x29, x30, [SP], 16
+
+            LDR x12, =num
+            MOV w13, 0
+            MOV x14, 0
+
+            cls_num:
+                STRB w13, [x12], 1
+                ADD x14, x14, 1
+                CMP x14, 3
+                BNE cls_num
+                LDR x10, =num
+                CBNZ x20, rd_num
+
+        rd_end:
+            print salto, lenSalto
+            print readSuccess, lenReadSuccess
+            read 0, opcion, 2
+            RET
+
+    
+
+    
