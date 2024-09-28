@@ -294,4 +294,60 @@ menu:
 
                 RET
 
-    
+    itoa:
+        // params: x0 => number, x1 => buffer address
+        MOV x10, 0  // contador de digitos a imprimir
+        MOV x12, 0  // flag para indicar si hay signo menos
+        MOV w2, 10000  // Base 10
+        CMP w0, 0  // Numero a convertir
+        BGT i_convertirAscii
+        CBZ w0, i_zero
+
+        B i_negative
+
+        i_zero:
+            ADD x10, x10, 1
+            MOV w5, 48
+            STRB w5, [x1], 1
+            B i_endConversion
+
+        i_negative:
+            MOV  x12, 1
+            MOV w5, 45
+            STRB w5, [x1], 1
+            NEG w0, w0
+
+        i_convertirAscii:
+            CBZ w2, i_endConversion
+            UDIV w3, w0, w2
+            CBZ w3, i_reduceBase
+
+            MOV w5, w3
+            ADD w5, w5, 48
+            STRB w5, [x1], 1
+            ADD x10, x10, 1
+
+            MUL w3, w3, w2
+            SUB w0, w0, w3
+
+            CMP w2, 1
+            BLE i_endConversion
+
+            i_reduceBase:
+                MOV w6, 10
+                UDIV w2, w2, w6
+
+                CBNZ w10, i_addZero
+                B i_convertirAscii
+
+            i_addZero:
+                CBNZ w3, i_convertirAscii
+                ADD x10, x10, 1
+                MOV w5, 48
+                STRB w5, [x1], 1
+                B i_convertirAscii
+
+        i_endConversion:
+            ADD x10, x10, x12
+            print num, x10
+            RET
