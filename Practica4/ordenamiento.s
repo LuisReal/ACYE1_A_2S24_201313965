@@ -51,8 +51,8 @@
         lenOperacionComa = . - operacionComa
 
     msgFilename:
-    .asciz "Ingrese el nombre del archivo: "
-    lenMsgFilename = .- msgFilename
+        .asciz "Ingrese el nombre del archivo: "
+        lenMsgFilename = .- msgFilename
 
     errorOpenFile:
         .asciz "Error al abrir el archivo\n"
@@ -246,6 +246,52 @@ menu:
             read 0, opcion, 2
             RET
 
-    
+    atoi:
+        // params: x5, x8 => buffer address, x12 => result address
+        SUB x5, x5, 1
+        a_c_digits:
+            LDRB w7, [x8], 1
+            CBZ w7, a_c_convert
+            CMP w7, 10
+            BEQ a_c_convert
+            B a_c_digits
+
+        a_c_convert:
+            SUB x8, x8, 2
+            MOV x4, 1
+            MOV x9, 0
+
+            a_c_loop:
+                LDRB w7, [x8], -1
+                CMP w7, 45
+                BEQ a_c_negative
+
+                SUB w7, w7, 48
+                MUL w7, w7, w4
+                ADD w9, w9, w7
+
+                MOV w6, 10
+                MUL w4, w4, w6
+
+                CMP x8, x5
+                BNE a_c_loop
+                B a_c_end
+
+            a_c_negative:
+                NEG w9, w9
+
+            a_c_end:
+                LDR x13, =count
+                LDR x13, [x13] // saltos
+                MOV x14, 2
+                MUL x14, x13, x14
+
+                STRH w9, [x12, x14] // usando 16 bits
+
+                ADD x13, x13, 1
+                LDR x12, =count
+                STR x13, [x12]
+
+                RET
 
     
