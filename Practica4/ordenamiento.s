@@ -170,3 +170,30 @@ menu:
     cont:
         input
         B menu // B = branch incondicional - se va a menu, lo cual simula un ciclo while
+
+    openFile:
+        // param: x1 -> filename
+        MOV x0, -100
+        MOV x2, 0
+        MOV x8, 56
+        SVC 0
+
+        CMP x0, 0
+        BLE op_f_error
+        LDR x9, =fileDescriptor
+        STR x0, [x9]
+        B op_f_end
+
+        op_f_error:
+            print errorOpenFile, lenErrOpenFile
+            read 0, opcion, 1
+
+        op_f_end:
+            RET
+
+    closeFile:
+        LDR x0, =fileDescriptor
+        LDR x0, [x0]
+        MOV x8, 57
+        SVC 0
+        RET
