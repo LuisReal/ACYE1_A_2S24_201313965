@@ -1,3 +1,7 @@
+.include "leerArchivo.s"
+.include "tipoOrdenamiento.s"
+
+
 .global _start
 
 .data
@@ -62,6 +66,10 @@
         .asciz "El Archivo Se Ha Leido Correctamente\n"
         lenReadSuccess = .- readSuccess
 
+    salto:
+        .asciz "\n"
+        lenSalto = .- salto
+
 .bss
     opcion:
         .space 5
@@ -86,33 +94,9 @@
 
     fileDescriptor:
         .space 8
+    
 
-//metodo print para imprimir en consola
-.macro print texto, cantidad
-    MOV x0, 1
-    LDR x1, =\texto
-    LDR x2, =\cantidad
-    MOV x8, 64        
-    SVC 0 
-.endm
 
-//metodo input para obtener los valores ingresados en la consola
-.macro input
-    MOV x0, 0
-    LDR x1, =opcion
-    LDR x2, =5 //es el tamaño bss .space 5 rservado para la variable de entrada
-    MOV x8, 63
-    SVC 0
-.endm
-
-// Macro para leer datos
-.macro read stdin, buffer, len
-    MOV x0, \stdin
-    LDR x1, =\buffer
-    MOV x2, \len
-    MOV x8, 63
-    SVC 0
-.endm
 
 .text
 _start:
@@ -120,36 +104,9 @@ _start:
     print encabezado, lenEncabezado //muestra mensaje encabezado en la terminal
     input
 
-menu:
-    print clear, lenClear //limpia la terminal
-    print menuPrincipal, lenMenu //muestra mensaje menuPrincipal en la terminal
-    print Opcion, lenOpcion //muestra mensaje Ingrese una opcion en la terminal
-    input 
-
-    LDR x10, =opcion //almacena la opcion ingresada en el registro x10
-    LDRB w10, [x10]
-
-    CMP w10, 49   // 49 es en codigo ascii equivale a 1
-    BEQ ingresoLista
-
-    CMP w10, 50
-    BEQ Bubble
-
-    CMP w10, 51
-    BEQ Quick
-
-    CMP w10, 52
-    BEQ Insertion
-
-    CMP w10, 53
-    BEQ Merge
-
-    CMP w10, 54  // 54 es en codigo ascii que equivale a 6, termina el programa
-    BEQ end
-
-    ingresoLista:
+    menu:
         print clear, lenClear //limpia la terminal
-        print subMenu, lensubMenu //muestra mensaje subMenu en la terminal
+        print menuPrincipal, lenMenu //muestra mensaje menuPrincipal en la terminal
         print Opcion, lenOpcion //muestra mensaje Ingrese una opcion en la terminal
         input 
 
@@ -157,197 +114,64 @@ menu:
         LDRB w10, [x10]
 
         CMP w10, 49   // 49 es en codigo ascii equivale a 1
-        BEQ manual
+        BEQ ingresoLista
 
-        CMP w10, 50
-        BEQ archivoCSV
-
-        CMP w10, 51
-        BEQ regresar
-
-        B cont // B = branch incondicional - se va a cont
     
-    cont:
-        input
-        B menu // B = branch incondicional - se va a menu, lo cual simula un ciclo while
+        CMP w10, 50
+        BEQ bubble
 
-    openFile:
-        // param: x1 -> filename
-        MOV x0, -100
-        MOV x2, 0
-        MOV x8, 56
-        SVC 0
+        /* 
+        CMP w10, 51
+        BEQ quick
 
-        CMP x0, 0
-        BLE op_f_error
-        LDR x9, =fileDescriptor
-        STR x0, [x9]
-        B op_f_end
+        CMP w10, 52
+        BEQ insertion
 
-        op_f_error:
-            print errorOpenFile, lenErrOpenFile
-            read 0, opcion, 1
+        CMP w10, 53
+        BEQ merge
+        */
+        CMP w10, 54  // 54 es en codigo ascii que equivale a 6, termina el programa
+        BEQ end
 
-        op_f_end:
-            RET
+        ingresoLista:
+            print clear, lenClear //limpia la terminal
+            print subMenu, lensubMenu //muestra mensaje subMenu en la terminal
+            print Opcion, lenOpcion //muestra mensaje Ingrese una opcion en la terminal
+            input 
 
-    closeFile:
-        LDR x0, =fileDescriptor
-        LDR x0, [x0]
-        MOV x8, 57
-        SVC 0
-        RET
+            LDR x10, =opcion //almacena la opcion ingresada en el registro x10
+            LDRB w10, [x10]
 
-    readCSV:
-        // codidgo para leer numero y convertir
-        LDR x10, =num    // Buffer para almacenar el numero
-        LDR x11, =fileDescriptor
-        LDR x11, [x11]
+            //CMP w10, 49   // 49 es en codigo ascii equivale a 1
+            //BEQ manual
 
-        rd_num:
-            read x11, character, 1
-            LDR x4, =character
-            LDRB w3, [x4]
-            CMP w3, 44
-            BEQ rd_cv_num
+            //CMP w10, 50
+            //BEQ archivoCSV
 
-            MOV x20, x0
-            CBZ x0, rd_cv_num
+            CMP w10, 51
+            BEQ cont
 
-            STRB w3, [x10], 1
-            B rd_num
+        bubble:
+            BL bubbleSort
+            B cont // B = branch incondicional - se va a cont
 
-        rd_cv_num:
-            LDR x5, =num
-            LDR x8, =num
-            LDR x12, =array
+        quick:
+            B cont // B = branch incondicional - se va a cont
 
-            STP x29, x30, [SP, -16]!
+        insertion:
+            B cont // B = branch incondicional - se va a cont
 
-            BL atoi
+        merge:
+            B cont // B = branch incondicional - se va a cont
 
-            LDP x29, x30, [SP], 16
+        cont:
+            input
+            B menu // B = branch incondicional - se va a menu, lo cual simula un ciclo while
 
-            LDR x12, =num
-            MOV w13, 0
-            MOV x14, 0
+        end:
+            mov x0, 0   // Codigo de error de la aplicacion -> 0: no hay error
+            mov x8, 93  // Codigo de la llamada al sistema
+            svc 0       // Ejecutar la llamada al sistema
 
-            cls_num:
-                STRB w13, [x12], 1
-                ADD x14, x14, 1
-                CMP x14, 3
-                BNE cls_num
-                LDR x10, =num
-                CBNZ x20, rd_num
 
-        rd_end:
-            print salto, lenSalto
-            print readSuccess, lenReadSuccess
-            read 0, opcion, 2
-            RET
-
-    atoi:
-        // params: x5, x8 => buffer address, x12 => result address
-        SUB x5, x5, 1
-        a_c_digits:
-            LDRB w7, [x8], 1
-            CBZ w7, a_c_convert
-            CMP w7, 10
-            BEQ a_c_convert
-            B a_c_digits
-
-        a_c_convert:
-            SUB x8, x8, 2
-            MOV x4, 1
-            MOV x9, 0
-
-            a_c_loop:
-                LDRB w7, [x8], -1
-                CMP w7, 45
-                BEQ a_c_negative
-
-                SUB w7, w7, 48
-                MUL w7, w7, w4
-                ADD w9, w9, w7
-
-                MOV w6, 10
-                MUL w4, w4, w6
-
-                CMP x8, x5
-                BNE a_c_loop
-                B a_c_end
-
-            a_c_negative:
-                NEG w9, w9
-
-            a_c_end:
-                LDR x13, =count
-                LDR x13, [x13] // saltos
-                MOV x14, 2
-                MUL x14, x13, x14
-
-                STRH w9, [x12, x14] // usando 16 bits
-
-                ADD x13, x13, 1
-                LDR x12, =count
-                STR x13, [x12]
-
-                RET
-
-    itoa:
-        // params: x0 => number, x1 => buffer address
-        MOV x10, 0  // contador de digitos a imprimir
-        MOV x12, 0  // flag para indicar si hay signo menos
-        MOV w2, 10000  // Base 10
-        CMP w0, 0  // Numero a convertir
-        BGT i_convertirAscii
-        CBZ w0, i_zero
-
-        B i_negative
-
-        i_zero:
-            ADD x10, x10, 1
-            MOV w5, 48
-            STRB w5, [x1], 1
-            B i_endConversion
-
-        i_negative:
-            MOV  x12, 1
-            MOV w5, 45
-            STRB w5, [x1], 1
-            NEG w0, w0
-
-        i_convertirAscii:
-            CBZ w2, i_endConversion
-            UDIV w3, w0, w2
-            CBZ w3, i_reduceBase
-
-            MOV w5, w3
-            ADD w5, w5, 48
-            STRB w5, [x1], 1
-            ADD x10, x10, 1
-
-            MUL w3, w3, w2
-            SUB w0, w0, w3
-
-            CMP w2, 1
-            BLE i_endConversion
-
-            i_reduceBase:
-                MOV w6, 10
-                UDIV w2, w2, w6
-
-                CBNZ w10, i_addZero
-                B i_convertirAscii
-
-            i_addZero:
-                CBNZ w3, i_convertirAscii
-                ADD x10, x10, 1
-                MOV w5, 48
-                STRB w5, [x1], 1
-                B i_convertirAscii
-
-        i_endConversion:
-            ADD x10, x10, x12
-            print num, x10
-            RET
+    
