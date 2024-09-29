@@ -621,7 +621,7 @@ menu:
 
 
     cont:
-        input
+        input   // es importante agregar este input para poder irse a menu(presionar enter para continuar)
         B menu // B = branch incondicional - se va a menu, lo cual simula un ciclo while
 
     error:

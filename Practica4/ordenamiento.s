@@ -70,6 +70,14 @@
         .asciz "\n"
         lenSalto = .- salto
 
+    espacio:
+        .asciz " "
+        lenEspacio = .- espacio
+
+    prueba:
+        .asciz "Estoy por aca"
+        lenPrueba = .- prueba
+
 .bss
     opcion:
         .space 5
@@ -116,7 +124,7 @@ _start:
         CMP w10, 49   // 49 es en codigo ascii equivale a 1
         BEQ ingresoLista
 
-    
+        
         CMP w10, 50
         BEQ bubble
 
@@ -130,8 +138,11 @@ _start:
         CMP w10, 53
         BEQ merge
         */
+
         CMP w10, 54  // 54 es en codigo ascii que equivale a 6, termina el programa
         BEQ end
+
+        
 
         ingresoLista:
             print clear, lenClear //limpia la terminal
@@ -145,14 +156,34 @@ _start:
             //CMP w10, 49   // 49 es en codigo ascii equivale a 1
             //BEQ manual
 
-            //CMP w10, 50
-            //BEQ archivoCSV
+            CMP w10, 50
+            BL archivoCSV
 
             CMP w10, 51
             BEQ cont
 
         bubble:
             BL bubbleSort
+
+            // recorrer array y convertir a ascii
+            LDR x9, =count
+            LDR x9, [x9] // length => cantidad de numeros leidos del csv
+            MOV x7, 0
+            LDR x15, =array
+
+            loop_array:
+                LDRH w0, [x15], 2
+                LDR x1, =num
+                BL itoa
+
+                print espacio, lenEspacio
+
+                ADD x7, x7, 1
+                CMP x9, x7
+                BNE loop_array
+
+            print salto, lenSalto
+            
             B cont // B = branch incondicional - se va a cont
 
         quick:
@@ -165,7 +196,7 @@ _start:
             B cont // B = branch incondicional - se va a cont
 
         cont:
-            input
+            input   // es importante agregar este input para poder continuar(presionar enter para continuar)
             B menu // B = branch incondicional - se va a menu, lo cual simula un ciclo while
 
         end:

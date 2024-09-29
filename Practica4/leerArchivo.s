@@ -1,6 +1,7 @@
 .include "macros.s" 
 
 archivoCSV:
+    stp x29, x30, [sp, #-16]!   //es necesario guardar la direccion del return para poder regresar
     // Imprimir mensaje para ingresar el nombre del archivo
     print msgFilename, lenMsgFilename
     read 0, filename, 50
@@ -25,7 +26,11 @@ archivoCSV:
     BL readCSV
 
     // cierra el archivo
-    BL closeFile 
+    BL closeFile
+
+    ldp x29, x30, [sp], #16 // se usa la direccion del return para poder regresar
+    
+    RET 
 
     openFile:
         // param: x1 -> filename
@@ -42,7 +47,7 @@ archivoCSV:
 
         op_f_error:
             print errorOpenFile, lenErrOpenFile
-            read 0, opcion, 1
+            read 0, opcion, 1                  // es importante agregar este input para poder continuar(presionar enter para continuar)
 
         op_f_end:
             RET
@@ -99,7 +104,7 @@ archivoCSV:
         rd_end:
             print salto, lenSalto
             print readSuccess, lenReadSuccess
-            read 0, opcion, 2
+            read 0, opcion, 2                   // es importante agregar este input para poder continuar(presionar enter para continuar)
             RET
 
     atoi:
