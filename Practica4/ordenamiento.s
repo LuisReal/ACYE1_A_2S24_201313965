@@ -83,7 +83,7 @@
         .space 5
     
     operacion:
-        .space 20   // => Reserva espacion en bytes para operacion
+        .space 20   // => Reserva espacio en bytes para operacion
 
     filename:
         .zero 50   // reserva bloque de memoria inicializada en ceros
@@ -153,8 +153,8 @@ _start:
             LDR x10, =opcion //almacena la opcion ingresada en el registro x10
             LDRB w10, [x10]
 
-            //CMP w10, 49   // 49 es en codigo ascii equivale a 1
-            //BEQ manual
+            /*CMP w10, 49   // 49 es en codigo ascii equivale a 1
+            BL manual*/
 
             CMP w10, 50
             BL archivoCSV
@@ -183,7 +183,7 @@ _start:
                 BNE loop_array
 
             print salto, lenSalto
-            
+
             B cont // B = branch incondicional - se va a cont
 
         quick:

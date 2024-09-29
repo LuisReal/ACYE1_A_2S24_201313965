@@ -1,5 +1,44 @@
 .include "macros.s" 
 
+manual:
+    stp x29, x30, [sp, #-16]!   //es necesario guardar la direccion del return para poder regresar
+    print operacionComa, lenOperacionComa
+
+    read 0, array, 1024         //guardo en x1 lo ingresado por consola
+
+    readArray:
+        // codidgo para leer numero y convertir a entero
+        LDR x10, =num    // Buffer para almacenar el numero
+        
+        
+
+        rd_Manual_num:
+            
+            LDR x4, =array          //al final array contendra los valores
+            LDRB w3, [x4], 1
+            CMP w3, 44
+            BEQ rd_cv_num
+
+            MOV x20, x0
+            CBZ x0, rd_cv_num
+
+            STRB w3, [x10], 1
+            B rd_Manual_num
+
+        
+    ldp x29, x30, [sp], #16 // se usa la direccion del return para poder regresar
+    
+    RET
+/*
+gdb-multiarch -q --nh \
+  -ex 'set architecture aarch64' \
+  -ex 'file ordenamiento' \
+  -ex 'target remote localhost:1234' \
+  -ex 'layout split' \
+  -ex 'layout regs' 
+
+*/
+
 archivoCSV:
     stp x29, x30, [sp, #-16]!   //es necesario guardar la direccion del return para poder regresar
     // Imprimir mensaje para ingresar el nombre del archivo
@@ -32,183 +71,185 @@ archivoCSV:
     
     RET 
 
-    openFile:
-        // param: x1 -> filename
-        MOV x0, -100
-        MOV x2, 0
-        MOV x8, 56
-        SVC 0
 
-        CMP x0, 0
-        BLE op_f_error
-        LDR x9, =fileDescriptor
-        STR x0, [x9]
-        B op_f_end
+// las siguientes etiquetas(identificadores) no tienen identacion para poder ser accedidos desde cualquier lugar
+openFile:
+    // param: x1 -> filename
+    MOV x0, -100
+    MOV x2, 0
+    MOV x8, 56
+    SVC 0
 
-        op_f_error:
-            print errorOpenFile, lenErrOpenFile
-            read 0, opcion, 1                  // es importante agregar este input para poder continuar(presionar enter para continuar)
+    CMP x0, 0
+    BLE op_f_error
+    LDR x9, =fileDescriptor
+    STR x0, [x9]
+    B op_f_end
 
-        op_f_end:
-            RET
+    op_f_error:
+        print errorOpenFile, lenErrOpenFile
+        read 0, opcion, 1                  // es importante agregar este input para poder continuar(presionar enter para continuar)
 
-    closeFile:
-        LDR x0, =fileDescriptor
-        LDR x0, [x0]
-        MOV x8, 57
-        SVC 0
+    op_f_end:
         RET
 
-    readCSV:
-        // codidgo para leer numero y convertir a entero
-        LDR x10, =num    // Buffer para almacenar el numero
-        LDR x11, =fileDescriptor
-        LDR x11, [x11]
+closeFile:
+    LDR x0, =fileDescriptor
+    LDR x0, [x0]
+    MOV x8, 57
+    SVC 0
+    RET
 
-        rd_num:
-            read x11, character, 1
-            LDR x4, =character
-            LDRB w3, [x4]
-            CMP w3, 44
-            BEQ rd_cv_num
+readCSV:
+    // codidgo para leer numero y convertir a entero
+    LDR x10, =num    // Buffer para almacenar el numero
+    LDR x11, =fileDescriptor
+    LDR x11, [x11]
 
-            MOV x20, x0
-            CBZ x0, rd_cv_num
+    rd_num:
+        read x11, character, 1   //leera caracter por caracter que hay en el archivo csv
+        LDR x4, =character
+        LDRB w3, [x4]
+        CMP w3, 44
+        BEQ rd_cv_num
 
-            STRB w3, [x10], 1
-            B rd_num
+        MOV x20, x0
+        CBZ x0, rd_cv_num
 
-        rd_cv_num:
-            LDR x5, =num
-            LDR x8, =num
-            LDR x12, =array
+        STRB w3, [x10], 1
+        B rd_num
 
-            STP x29, x30, [SP, -16]!
+    rd_cv_num:
+        LDR x5, =num
+        LDR x8, =num
+        LDR x12, =array
 
-            BL atoi                 // convierte de ascii a entero
+        STP x29, x30, [SP, -16]!
 
-            LDP x29, x30, [SP], 16
+        BL atoi                 // convierte de ascii a entero
 
-            LDR x12, =num
-            MOV w13, 0
-            MOV x14, 0
+        LDP x29, x30, [SP], 16
 
-            cls_num:
-                STRB w13, [x12], 1
-                ADD x14, x14, 1
-                CMP x14, 3
-                BNE cls_num
-                LDR x10, =num
-                CBNZ x20, rd_num
+        LDR x12, =num
+        MOV w13, 0
+        MOV x14, 0
 
-        rd_end:
-            print salto, lenSalto
-            print readSuccess, lenReadSuccess
-            read 0, opcion, 2                   // es importante agregar este input para poder continuar(presionar enter para continuar)
+        cls_num:
+            STRB w13, [x12], 1
+            ADD x14, x14, 1
+            CMP x14, 3
+            BNE cls_num
+            LDR x10, =num
+            CBNZ x20, rd_num
+
+    rd_end:
+        print salto, lenSalto
+        print readSuccess, lenReadSuccess
+        read 0, opcion, 2                   // es importante agregar este input para poder continuar(presionar enter para continuar)
+        RET
+
+atoi:
+    // params: x5, x8 => buffer address, x12 => result address
+    SUB x5, x5, 1
+    a_c_digits:
+        LDRB w7, [x8], 1
+        CBZ w7, a_c_convert
+        CMP w7, 10
+        BEQ a_c_convert
+        B a_c_digits
+
+    a_c_convert:
+        SUB x8, x8, 2
+        MOV x4, 1
+        MOV x9, 0
+
+        a_c_loop:
+            LDRB w7, [x8], -1
+            CMP w7, 45
+            BEQ a_c_negative
+
+            SUB w7, w7, 48
+            MUL w7, w7, w4
+            ADD w9, w9, w7
+
+            MOV w6, 10
+            MUL w4, w4, w6
+
+            CMP x8, x5
+            BNE a_c_loop
+            B a_c_end
+
+        a_c_negative:
+            NEG w9, w9
+
+        a_c_end:
+            LDR x13, =count
+            LDR x13, [x13] // saltos
+            MOV x14, 2
+            MUL x14, x13, x14
+
+            STRH w9, [x12, x14] // usando 16 bits
+
+            ADD x13, x13, 1
+            LDR x12, =count
+            STR x13, [x12]
+
             RET
 
-    atoi:
-        // params: x5, x8 => buffer address, x12 => result address
-        SUB x5, x5, 1
-        a_c_digits:
-            LDRB w7, [x8], 1
-            CBZ w7, a_c_convert
-            CMP w7, 10
-            BEQ a_c_convert
-            B a_c_digits
+itoa:
+    // params: x0 => number, x1 => buffer address
+    MOV x10, 0  // contador de digitos a imprimir
+    MOV x12, 0  // flag para indicar si hay signo menos
+    MOV w2, 10000  // Base 10
+    CMP w0, 0  // Numero a convertir
+    BGT i_convertirAscii
+    CBZ w0, i_zero
 
-        a_c_convert:
-            SUB x8, x8, 2
-            MOV x4, 1
-            MOV x9, 0
+    B i_negative
 
-            a_c_loop:
-                LDRB w7, [x8], -1
-                CMP w7, 45
-                BEQ a_c_negative
+    i_zero:
+        ADD x10, x10, 1
+        MOV w5, 48
+        STRB w5, [x1], 1
+        B i_endConversion
 
-                SUB w7, w7, 48
-                MUL w7, w7, w4
-                ADD w9, w9, w7
+    i_negative:
+        MOV  x12, 1
+        MOV w5, 45
+        STRB w5, [x1], 1
+        NEG w0, w0
 
-                MOV w6, 10
-                MUL w4, w4, w6
+    i_convertirAscii:
+        CBZ w2, i_endConversion
+        UDIV w3, w0, w2
+        CBZ w3, i_reduceBase
 
-                CMP x8, x5
-                BNE a_c_loop
-                B a_c_end
+        MOV w5, w3
+        ADD w5, w5, 48
+        STRB w5, [x1], 1
+        ADD x10, x10, 1
 
-            a_c_negative:
-                NEG w9, w9
+        MUL w3, w3, w2
+        SUB w0, w0, w3
 
-            a_c_end:
-                LDR x13, =count
-                LDR x13, [x13] // saltos
-                MOV x14, 2
-                MUL x14, x13, x14
+        CMP w2, 1
+        BLE i_endConversion
 
-                STRH w9, [x12, x14] // usando 16 bits
+        i_reduceBase:
+            MOV w6, 10
+            UDIV w2, w2, w6
 
-                ADD x13, x13, 1
-                LDR x12, =count
-                STR x13, [x12]
+            CBNZ w10, i_addZero
+            B i_convertirAscii
 
-                RET
-
-    itoa:
-        // params: x0 => number, x1 => buffer address
-        MOV x10, 0  // contador de digitos a imprimir
-        MOV x12, 0  // flag para indicar si hay signo menos
-        MOV w2, 10000  // Base 10
-        CMP w0, 0  // Numero a convertir
-        BGT i_convertirAscii
-        CBZ w0, i_zero
-
-        B i_negative
-
-        i_zero:
+        i_addZero:
+            CBNZ w3, i_convertirAscii
             ADD x10, x10, 1
             MOV w5, 48
             STRB w5, [x1], 1
-            B i_endConversion
+            B i_convertirAscii
 
-        i_negative:
-            MOV  x12, 1
-            MOV w5, 45
-            STRB w5, [x1], 1
-            NEG w0, w0
-
-        i_convertirAscii:
-            CBZ w2, i_endConversion
-            UDIV w3, w0, w2
-            CBZ w3, i_reduceBase
-
-            MOV w5, w3
-            ADD w5, w5, 48
-            STRB w5, [x1], 1
-            ADD x10, x10, 1
-
-            MUL w3, w3, w2
-            SUB w0, w0, w3
-
-            CMP w2, 1
-            BLE i_endConversion
-
-            i_reduceBase:
-                MOV w6, 10
-                UDIV w2, w2, w6
-
-                CBNZ w10, i_addZero
-                B i_convertirAscii
-
-            i_addZero:
-                CBNZ w3, i_convertirAscii
-                ADD x10, x10, 1
-                MOV w5, 48
-                STRB w5, [x1], 1
-                B i_convertirAscii
-
-        i_endConversion:
-            ADD x10, x10, x12
-            print num, x10
-            RET
+    i_endConversion:
+        ADD x10, x10, x12
+        print num, x10
+        RET
