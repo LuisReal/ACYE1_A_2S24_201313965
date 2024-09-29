@@ -1,7 +1,7 @@
 .include "macros.s" 
 
 manual:
-    stp x29, x30, [sp, #-16]!   //es necesario guardar la direccion del return para poder regresar
+   
     print operacionComa, lenOperacionComa
 
     read 0, array, 1024         //guardo en x1 lo ingresado por consola
@@ -9,26 +9,55 @@ manual:
     readArray:
         // codidgo para leer numero y convertir a entero
         LDR x10, =num    // Buffer para almacenar el numero
-        
-        
+        LDR x11, =array          //al final array contendra los valores
 
         rd_Manual_num:
             
-            LDR x4, =array          //al final array contendra los valores
-            LDRB w3, [x4], 1
+            LDRB w3, [x11], 1
             CMP w3, 44
-            BEQ rd_cv_num
+            BEQ rd_atoi_num
 
-            MOV x20, x0
-            CBZ x0, rd_cv_num
+            MOV w20, w3
+            CMP w20, 10              // si w20 = 10 (salto de linea)
+            BEQ rd_atoi_num
 
             STRB w3, [x10], 1
             B rd_Manual_num
 
-        
-    ldp x29, x30, [sp], #16 // se usa la direccion del return para poder regresar
     
-    RET
+
+        rd_atoi_num:
+            LDR x5, =num
+            LDR x8, =num
+            LDR x12, =array
+
+            STP x29, x30, [SP, -16]!
+
+            BL atoi                 // convierte de ascii a entero
+
+            LDP x29, x30, [SP], 16
+
+            LDR x12, =num
+            MOV w13, 0
+            MOV x14, 0
+
+            cls_nums:
+                STRB w13, [x12], 1
+                ADD x14, x14, 1
+                CMP x14, 3
+                BNE cls_nums
+                LDR x10, =num
+                CMP w20, 10         //si w20 != 10 (salto de linea) regresa a rd_Manual_num para continuar leyendo los numeros
+                BNE rd_Manual_num
+                //si w20 = 10 continua hacia rd_array_end
+
+        rd_array_end:
+            print salto, lenSalto
+            print readSuccess, lenReadSuccess
+            read 0, opcion, 2                   // es importante agregar este input para poder continuar(presionar enter para continuar)
+            B menu     //regreso al menu principal
+
+    
 /*
 gdb-multiarch -q --nh \
   -ex 'set architecture aarch64' \
@@ -148,7 +177,7 @@ readCSV:
         read 0, opcion, 2                   // es importante agregar este input para poder continuar(presionar enter para continuar)
         RET
 
-atoi:
+atoi: //ascii to integer
     // params: x5, x8 => buffer address, x12 => result address
     SUB x5, x5, 1
     a_c_digits:

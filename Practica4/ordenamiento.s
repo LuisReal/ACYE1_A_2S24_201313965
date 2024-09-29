@@ -153,14 +153,18 @@ _start:
             LDR x10, =opcion //almacena la opcion ingresada en el registro x10
             LDRB w10, [x10]
 
-            /*CMP w10, 49   // 49 es en codigo ascii equivale a 1
-            BL manual*/
+            
+            CMP w10, 49   // 49 es en codigo ascii equivale a 1
+            BEQ manual
+            
 
             CMP w10, 50
-            BL archivoCSV
+            BEQ archivoCSV
 
-            CMP w10, 51
+            CMP w10, 51   // 50 es en codigo ascii equivale a 3
             BEQ cont
+
+            //aqui va un mensaje de error sino ingresa la opcion correcta
 
         bubble:
             BL bubbleSort
