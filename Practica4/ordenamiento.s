@@ -66,6 +66,10 @@
         .asciz "El Archivo Se Ha Leido Correctamente\n"
         lenReadSuccess = .- readSuccess
 
+    readManual:
+        .asciz "valores ingresados Manualmente leidos exitosamente\n"
+        lenReadManual = .- readManual
+
     salto:
         .asciz "\n"
         lenSalto = .- salto
@@ -73,6 +77,18 @@
     espacio:
         .asciz " "
         lenEspacio = .- espacio
+
+    conjuntoInicial:
+        .asciz "Conjunto Inicial: "
+        lenconjuntoInicial = .- conjuntoInicial
+
+    paso:
+        .asciz "Paso "
+        lenPaso = .- paso
+
+    dosPuntos:
+        .asciz ": "
+        lendosPuntos = .- dosPuntos
 
     prueba:
         .asciz "Estoy por aca"
@@ -91,8 +107,12 @@
     array:
         .skip 1024
 
+    arrayManual:
+        .skip 1024
+
     count:
         .zero 8
+
 
     num:
         .space 4
@@ -103,7 +123,8 @@
     fileDescriptor:
         .space 8
     
-
+    numPaso:
+        .space 8
 
 
 .text
@@ -167,28 +188,7 @@ _start:
             //aqui va un mensaje de error sino ingresa la opcion correcta
 
         bubble:
-            BL bubbleSort
-
-            // recorrer array y convertir a ascii
-            LDR x9, =count
-            LDR x9, [x9] // length => cantidad de numeros leidos del csv
-            MOV x7, 0
-            LDR x15, =array
-
-            loop_array:
-                LDRH w0, [x15], 2
-                LDR x1, =num
-                BL itoa
-
-                print espacio, lenEspacio
-
-                ADD x7, x7, 1
-                CMP x9, x7
-                BNE loop_array
-
-            print salto, lenSalto
-
-            B cont // B = branch incondicional - se va a cont
+            B bubbleSort
 
         quick:
             B cont // B = branch incondicional - se va a cont

@@ -1,19 +1,27 @@
 .include "macros.s" 
 
 manual:
-   
+
+    BL reset_array              //resetea el array con valor zeros, si ya fue usado anteriormente
+    BL reset_count              //resetea count (para que no se repitan los ceros)
+
     print operacionComa, lenOperacionComa
+    
+    //input
+    read 0, arrayManual, 1024         //guardo en x1 lo ingresado por consola
 
-    read 0, array, 1024         //guardo en x1 lo ingresado por consola
-
+    BL read_array
+    
     readArray:
         // codidgo para leer numero y convertir a entero
-        LDR x10, =num    // Buffer para almacenar el numero
-        LDR x11, =array          //al final array contendra los valores
+        LDR x10, =num                   // Buffer para almacenar el numero
+        LDR x11, =arrayManual          //al final array contendra los valores
+        MOV x15, 0
 
         rd_Manual_num:
             
-            LDRB w3, [x11], 1
+            LDRB w3, [x11, x15]
+            ADD x15, x15, 1
             CMP w3, 44
             BEQ rd_atoi_num
 
@@ -53,9 +61,41 @@ manual:
 
         rd_array_end:
             print salto, lenSalto
-            print readSuccess, lenReadSuccess
+            print readManual, lenReadManual
             read 0, opcion, 2                   // es importante agregar este input para poder continuar(presionar enter para continuar)
             B menu     //regreso al menu principal
+
+
+read_array: //lee lo ingresado por consola
+    LDR x0, =arrayManual       // Apuntar al inicio del array
+    MOV x10, 50                 // Número de bytes a leer          
+
+read_array_zero:
+    LDRB w3, [x0], 1   
+    SUBS x10, x10, 1 
+    CMP x10, 0    
+    BNE read_array_zero
+    RET  
+
+
+
+reset_array:
+    LDR x0, =array     // Apuntar al inicio del array
+    MOV x10, 128      
+    MOV x3, 0           
+
+reset_array_zero:
+    STR x3, [x0], 8   
+    SUBS x10, x10, 1 
+    CMP x10, 0    
+    BNE reset_array_zero
+    RET  
+
+reset_count:
+    LDR x0, =count       // Apuntar al inicio de count
+    MOV x3, 0           
+    STR x3, [x0]   
+    RET
 
     
 /*
@@ -69,8 +109,9 @@ gdb-multiarch -q --nh \
 */
 
 archivoCSV:
-    stp x29, x30, [sp, #-16]!   //es necesario guardar la direccion del return para poder regresar
-    // Imprimir mensaje para ingresar el nombre del archivo
+    BL reset_array      //resetea array (para reutilizar el array en cada ordenamiento)
+    BL reset_count      //resetea count (para que no se repitan los ceros)
+
     print msgFilename, lenMsgFilename
     read 0, filename, 50
 
@@ -96,9 +137,8 @@ archivoCSV:
     // cierra el archivo
     BL closeFile
 
-    ldp x29, x30, [sp], #16 // se usa la direccion del return para poder regresar
     
-    RET 
+    B menu
 
 
 // las siguientes etiquetas(identificadores) no tienen identacion para poder ser accedidos desde cualquier lugar

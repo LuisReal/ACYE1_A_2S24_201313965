@@ -754,7 +754,7 @@ menu:
 		ret
 
 
-	//convierte a ascii(string) el resultado de (suma, resta)
+	//ITOA convierte a ascii(string) el resultado de (suma, resta)
 
 	setstring:
 		ldr x0, =result		// load address of result
