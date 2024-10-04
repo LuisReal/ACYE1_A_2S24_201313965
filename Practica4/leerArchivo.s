@@ -158,7 +158,7 @@ openFile:
     op_f_error:
         print errorOpenFile, lenErrOpenFile
         read 0, opcion, 1                  // es importante agregar este input para poder continuar(presionar enter para continuar)
-
+        B menu
     op_f_end:
         RET
 

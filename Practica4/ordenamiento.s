@@ -79,7 +79,7 @@
         lenEspacio = .- espacio
 
     conjuntoInicial:
-        .asciz "Conjunto Inicial: "
+        .ascii "Conjunto Inicial: "
         lenconjuntoInicial = .- conjuntoInicial
 
     paso:
@@ -103,19 +103,19 @@
         lenComa = .- coma
 
     msgBubble:
-        .asciz "Ordenando con Bubble Sort"
-        lenPrueba = .- prueba
+        .ascii "ORDENANDO CON BUBBLE SORT\n"
+        lenmsgBubble = .- msgBubble
 
     msgQuick:
-        .asciz "Ordenando con Quick Sort"
+        .ascii "ORDENANDO CON QUICK SORT"
         lenmsgQuick = .- msgQuick
 
     msgInsertion:
-        .asciz "Ordenando con Insertion Sort"
+        .ascii "ORDENANDO CON INSERTION SORT"
         lenmsgInsertion = .- msgInsertion
 
     msgMerge:
-        .asciz "Ordenando con Merge Sort"
+        .ascii "Ordenando con Merge Sort"
         lenmsgMerge = .- msgMerge
 
     nombreArchivo: 

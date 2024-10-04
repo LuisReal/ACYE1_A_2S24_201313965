@@ -2,10 +2,14 @@
 
 bubbleSort:
     print conjuntoInicial, lenconjuntoInicial
+    write conjuntoInicial, lenconjuntoInicial
     BL printArray
     write salto, lenSalto
+    write salto, lenSalto
+    write msgBubble, lenmsgBubble
+    write salto, lenSalto
     //BL copyArray
-    //BL array_to_ascii
+    
     
     BL reset_numPaso            // resetea el numero de pasos
 
@@ -136,29 +140,6 @@ copyLoop:
     RET
 
 
-array_to_ascii:
-    LDR x0, =count
-    LDR x0, [x0] // length => cantidad de numeros leidos del csv
-    ldr x1, =arrayAscii
-    MOV x8, 0
-    LDR x10, =arrayAscii	// load address of arrayAscii
-
-to_ascii_loop:
-
-    LDRH w7, [x1, x8, LSL 1]
-    ADD x8, x8, 1
-
-    
-    BL itoa3
-    //ADD x10, x10, x3         //aumenta la direccion de memoria (x3 proviene de itoa3)
-
-    CMP x8, x0              // SI X3 != x0
-    BNE to_ascii_loop
-
-    RET
-    
-
-   
 
 /*
 aarch64-linux-gnu-as -mcpu=cortex-a57 ordenamiento.s -o ordenamiento.o
