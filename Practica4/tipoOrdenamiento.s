@@ -3,7 +3,10 @@
 bubbleSort:
     print conjuntoInicial, lenconjuntoInicial
     BL printArray
-
+    write salto, lenSalto
+    //BL copyArray
+    //BL array_to_ascii
+    
     BL reset_numPaso            // resetea el numero de pasos
 
     LDR x17, =count
@@ -39,17 +42,26 @@ bubbleSort:
             ADD x9, x9, 1
 
             
-            ADD x19, x19, 1                   //se suma el contador de paso
+            ADD x19, x19, 1                 //se suma el contador de paso
             MOV x7, x19
             print paso, lenPaso             //imprime el texto Paso
+            write paso, lenPaso
+            ldr x10, =numPaso	            // load address of numPaso
             BL itoa3                        //convierte el contador x7 a ascii
-            print numPaso, lenPaso          //imprime el numero de paso
+            MOV x4, 8
+            print numPaso, x4               //imprime el numero de paso
+            BL printPaso
+            MOV x4, x3
+            write numPaso, x4
             print dosPuntos, lendosPuntos   //imprime el texto (:)
-            read 0, opcion, 1
+            write dosPuntos, lendosPuntos
             BL printArray                   //imprime el array cambiado
+            write salto, lenSalto
             
+            //read 0, opcion, 1             //presionar enter para continuar
+
             b_cont_loop2:
-                CMP x9, x20              // si x9 no es igual a x2
+                CMP x9, x20                 // si x9 no es igual a x2
                 BNE b_loop2
 
 
@@ -59,6 +71,18 @@ bubbleSort:
         
         read 0, opcion, 1
         B printNewArray
+
+printPaso:
+    ldr x0, =numPaso
+    mov x1, 8
+    mov x2, 0
+
+loop_paso:
+    ldrb w5, [x0], 1
+    add x2, x2, 1
+    cmp x1, x2
+    bne loop_paso
+    ret
 
 printNewArray:
     // recorrer array y convertir a ascii
@@ -84,11 +108,63 @@ printNewArray:
 
 
 reset_numPaso:
-    LDR x0, =numPaso       // Apuntar al inicio de count
+    LDR x0, =numPaso       // Apuntar al inicio de numPaso
     MOV x3, 0           
     STR x3, [x0]   
     RET
+
+ 
+
+copyArray:
+    LDR x0, =count
+    LDR x0, [x0] // length => cantidad de numeros leidos del csv
+    ldr x1, =array
+    ldr x2, =arrayAscii
+    
+    MOV x3, 0 
+
+copyLoop:
+
+    LDRH w4, [x1, x3, LSL 1]
+    STRH w4, [x2, x3, LSL 1]
+
+    ADD x3, x3, 1
+    
+    CMP x3, x0          // SI X3 != x0
+    BNE copyLoop
+
+    RET
+
+
+array_to_ascii:
+    LDR x0, =count
+    LDR x0, [x0] // length => cantidad de numeros leidos del csv
+    ldr x1, =arrayAscii
+    MOV x8, 0
+    LDR x10, =arrayAscii	// load address of arrayAscii
+
+to_ascii_loop:
+
+    LDRH w7, [x1, x8, LSL 1]
+    ADD x8, x8, 1
+
+    
+    BL itoa3
+    //ADD x10, x10, x3         //aumenta la direccion de memoria (x3 proviene de itoa3)
+
+    CMP x8, x0              // SI X3 != x0
+    BNE to_ascii_loop
+
+    RET
+    
+
+   
+
 /*
+aarch64-linux-gnu-as -mcpu=cortex-a57 ordenamiento.s -o ordenamiento.o
+aarch64-linux-gnu-ld ordenamiento.o -o ordenamiento
+qemu-aarch64 -g 1234 ./ordenamiento
+
 gdb-multiarch -q --nh \
   -ex 'set architecture aarch64' \
   -ex 'file ordenamiento' \
@@ -97,6 +173,7 @@ gdb-multiarch -q --nh \
   -ex 'layout regs' 
 
 */
+ 
 
 printArray:
     // recorrer array y convertir a ascii
@@ -111,9 +188,13 @@ printArray:
 
         STP x29, x30, [SP, -16]!
         BL itoa2
+
+        write num, x11
+        write coma, lenComa
         LDP x29, x30, [SP], 16
 
         print espacio, lenEspacio
+        //write espacio, lenEspacio
 
         ADD x16, x16, 1
         CMP x4, x16
@@ -122,7 +203,7 @@ printArray:
     print salto, lenSalto
     RET
 
-itoa2:
+itoa2: //integer a ascii
     // params: x0 => number, x1 => buffer address
     MOV x5,  0
     MOV x3,  0
@@ -182,8 +263,8 @@ itoa2:
         print num, x11
         RET
 
-itoa3:
-    ldr x10, =numPaso	// load address of numPaso
+itoa3: //convierte de integer a ascii
+    
     mov x11, x7			// number to convert
     mov x12, 10		    // base number
     mov x3, 0		    // number size = 0
@@ -191,28 +272,28 @@ itoa3:
 
     getsizeString:
         udiv x4, x4, x12		// remove last digit
-        add x3, x3, 1		// increment size  (siguiente posicion)
-        cmp x4, 0		    // if number != 0  (fin de cadena)
-        bne getsizeString		    // goto getsize
+        add x3, x3, 1		    // increment size  (siguiente posicion)
+        cmp x4, 0		        // if number != 0  (fin de cadena)
+        bne getsizeString		// goto getsize
         
         add x10, x10, x3		// str addr offset
         //mov w5, 10		    // newline ascii
         //strb w5, [x10]		// store newline
-        //sub x10, x10, 1		// decrement offset
-        add x3, x3, 1		// str final size
-        mov x4, x11		    // copy of number 
-        mov x5, 0		    // iter number = 0
+        sub x10, x10, 1		    // decrement offset
+        //add x3, x3, 1		    // str final size
+        mov x4, x11		        // copy of number 
+        mov x5, 0		        // iter number = 0
         
     getdigit:
         udiv x6, x4, x12		// remove last digit	
         msub x7, x6, x12, x4	// last digit
-        add x5, x5, 1		// increment iter
-        strb w7, [x10]		// store last digit
-        sub x10, x10, 1		// decrement offset
-        mov x4, x6		    // number remain
-        cmp x4, 0		    // if number != 0
-        bne getdigit		// goto getdigit
-        add x10, x10, 1		// reset addrgdb-multiarch -q --nh \
+        add x5, x5, 1		    // increment iter
+        strb w7, [x10]		    // store last digit
+        sub x10, x10, 1		    // decrement offset
+        mov x4, x6		        // number remain
+        cmp x4, 0		        // if number != 0
+        bne getdigit		    // goto getdigit
+        add x10, x10, 1		    // reset addrgdb-multiarch -q --nh \
 
 
     setascii:	

@@ -47,7 +47,7 @@
         lenContinuar = . - continuar
     
     errormsg:
-        .asciz "ERROR\n"
+        .asciz "ERROR: Ingrese una opcion correcta\n"
         lenErrormsg = . - errormsg
 
     operacionComa:
@@ -71,7 +71,7 @@
         lenReadManual = .- readManual
 
     salto:
-        .asciz "\n"
+        .ascii "\n"
         lenSalto = .- salto
 
     espacio:
@@ -83,16 +83,46 @@
         lenconjuntoInicial = .- conjuntoInicial
 
     paso:
-        .asciz "Paso "
+        .ascii "Paso "
         lenPaso = .- paso
 
+    totalPasos:
+        .asciz "El numero total de pasos es: "
+        lentotalPasos = .- totalPasos
+
     dosPuntos:
-        .asciz ": "
+        .ascii ": "
         lendosPuntos = .- dosPuntos
 
     prueba:
         .asciz "Estoy por aca"
         lenPrueba = .- prueba
+
+    coma:
+        .ascii ","
+        lenComa = .- coma
+
+    msgBubble:
+        .asciz "Ordenando con Bubble Sort"
+        lenPrueba = .- prueba
+
+    msgQuick:
+        .asciz "Ordenando con Quick Sort"
+        lenmsgQuick = .- msgQuick
+
+    msgInsertion:
+        .asciz "Ordenando con Insertion Sort"
+        lenmsgInsertion = .- msgInsertion
+
+    msgMerge:
+        .asciz "Ordenando con Merge Sort"
+        lenmsgMerge = .- msgMerge
+
+    nombreArchivo: 
+        .asciz "reporte.txt"
+
+   
+    buffer: .asciz "Hello\nWorld!\n"
 
 .bss
     opcion:
@@ -107,12 +137,14 @@
     array:
         .skip 1024
 
+    arrayAscii:
+        .skip 1024
+
     arrayManual:
         .skip 1024
 
     count:
         .zero 8
-
 
     num:
         .space 4
@@ -160,6 +192,12 @@ _start:
         BEQ merge
         */
 
+        CMP w10, 54  // si la opcion ingresada es mayor a 6 (muestra mensaje de error)
+        BGT error
+
+        CMP w10, 49  // si la opcion ingresada es menor a 6 (muestra mensaje de error)
+        BLT error
+
         CMP w10, 54  // 54 es en codigo ascii que equivale a 6, termina el programa
         BEQ end
 
@@ -198,6 +236,10 @@ _start:
 
         merge:
             B cont // B = branch incondicional - se va a cont
+
+        error:
+            print errormsg, lenErrormsg
+            B cont
 
         cont:
             input   // es importante agregar este input para poder continuar(presionar enter para continuar)
