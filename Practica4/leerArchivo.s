@@ -1,5 +1,10 @@
 .include "macros.s" 
 
+invalidData:
+    print errorDatos, lenerrorDatos
+    input
+    B ingresoLista
+
 manual:
 
     BL reset_array              //resetea el array con valor zeros, si ya fue usado anteriormente
@@ -9,6 +14,10 @@ manual:
     
     //input
     read 0, arrayManual, 1024         //guardo en x1 lo ingresado por consola
+    LDR x0, =arrayManual
+    LDRB w0, [x0]
+    CMP w0, 10
+    BEQ invalidData
 
     BL read_array
     

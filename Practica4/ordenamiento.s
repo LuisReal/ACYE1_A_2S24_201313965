@@ -38,6 +38,21 @@
         .asciz "3. Regresar al menu anterior\n"
         lensubMenu = .- subMenu
 
+    orden:
+        .asciz ">> Elija la forma de ordenar\n"
+        .asciz "1. Ascendente\n"
+        .asciz "2. Descendente\n"
+        .asciz "3. Regresar al menu anterior\n"
+        lenorden = .- orden
+
+    msgAscendente:
+        .ascii "(ASCENDENTE)\n"
+        lenmsgAscendente = .- msgAscendente
+    
+    msgDescendente:
+        .ascii "(DESCENDENTE)\n"
+        lenmsgDescendente = .- msgDescendente
+
     Opcion:
         .asciz "Ingrese Una Opcion: "
         lenOpcion = .- Opcion
@@ -49,6 +64,10 @@
     errormsg:
         .asciz "ERROR: Ingrese una opcion correcta\n"
         lenErrormsg = . - errormsg
+
+    errorDatos:
+        .asciz "ERROR: Ingrese Valores validos\n"
+        lenerrorDatos = . - errorDatos
 
     operacionComa:
         .asciz "Ingrese los numeros separados por coma: "
@@ -181,13 +200,14 @@ _start:
         CMP w10, 50
         BEQ bubble
 
-        /* 
+         
         CMP w10, 51
         BEQ quick
 
+        
         CMP w10, 52
         BEQ insertion
-
+        /* 
         CMP w10, 53
         BEQ merge
         */
@@ -223,19 +243,101 @@ _start:
             CMP w10, 51   // 50 es en codigo ascii equivale a 3
             BEQ cont
 
+            CMP w10, 51  // si la opcion ingresada es mayor a 3 (muestra mensaje de error)
+            BGT error
+
+            CMP w10, 49  // si la opcion ingresada es menor a 0 (muestra mensaje de error)
+            BLT error
+
             //aqui va un mensaje de error sino ingresa la opcion correcta
 
         bubble:
-            B bubbleSort
+
+            print clear, lenClear       //limpia la terminal
+            print orden, lenorden       //muestra mensaje orden en la terminal
+            print Opcion, lenOpcion     //muestra mensaje Ingrese una opcion en la terminal
+            input 
+
+            LDR x10, =opcion            //almacena la opcion ingresada en el registro x10
+            LDRB w10, [x10]
+
+            
+            CMP w10, 49   // 49 es en codigo ascii equivale a 1
+            BEQ bs_ascendente
+            
+
+            CMP w10, 50
+            BEQ bs_descendente
+
+            CMP w10, 51   // 50 es en codigo ascii equivale a 3
+            BEQ cont
+
+            CMP w10, 51  // si la opcion ingresada es mayor a 3 (muestra mensaje de error)
+            BGT error
+
+            CMP w10, 49  // si la opcion ingresada es menor a 0 (muestra mensaje de error)
+            BLT error
+
 
         quick:
-            B cont // B = branch incondicional - se va a cont
+            //BL copyArray2         //copia el arrayAscii a array
 
+            //LDR x0, =array        // Dirección base del array en x0
+            LDR x1, =count          // Cargar la cantidad de elementos en x1
+            LDR x1, [x1]            // Leer el valor de count (número de elementos)
+            SUB x2, x1, 1           // Calcular high = count - 1, en x2
+            MOV x1, 0               // Inicializar low = 0, en x1
+
+            B quickSort
+            
         insertion:
-            B cont // B = branch incondicional - se va a cont
+
+            print clear, lenClear       //limpia la terminal
+            print orden, lenorden       //muestra mensaje orden en la terminal
+            print Opcion, lenOpcion     //muestra mensaje Ingrese una opcion en la terminal
+            input 
+
+            LDR x10, =opcion            //almacena la opcion ingresada en el registro x10
+            LDRB w10, [x10]
+
+            
+            CMP w10, 49   // 49 es en codigo ascii equivale a 1
+            BEQ is_ascendente
+            
+
+            CMP w10, 50
+            BEQ is_descendente
+
+            CMP w10, 51   // 50 es en codigo ascii equivale a 3
+            BEQ cont
+
+            CMP w10, 51  // si la opcion ingresada es mayor a 3 (muestra mensaje de error)
+            BGT error
+
+            CMP w10, 49  // si la opcion ingresada es menor a 0 (muestra mensaje de error)
+            BLT error
+
 
         merge:
-            B cont // B = branch incondicional - se va a cont
+            B cont                  // B = branch incondicional - se va a cont
+
+        bs_ascendente:
+            BL copyArray            //copia el array a arrayAscii
+            BL copyArray2            //copia el arrayAscii a array
+            B bubbleSortAscendente
+
+        bs_descendente:
+            //BL copyArray            //copia el array a arrayAscii
+            BL copyArray2            //copia el arrayAscii a array
+            B bubbleSortDescendente
+
+        is_ascendente:
+            BL copyArray2           //copia el arrayAscii a array
+            B insertionSortAscendente
+
+        is_descendente:
+            BL copyArray2           //copia el arrayAscii a array
+            B insertionSortDescendente
 
         error:
             print errormsg, lenErrormsg
@@ -250,5 +352,44 @@ _start:
             mov x8, 93  // Codigo de la llamada al sistema
             svc 0       // Ejecutar la llamada al sistema
 
+        //copia los valores de array a arrayAscii
+        copyArray:
+            LDR x0, =count
+            LDR x0, [x0]        // length => cantidad de numeros leidos del csv
+            ldr x1, =array
+            ldr x2, =arrayAscii
+            
+            MOV x3, 0 
 
-    
+        copyLoop:
+
+            LDRH w4, [x1, x3, LSL 1]
+            STRH w4, [x2, x3, LSL 1]
+
+            ADD x3, x3, 1
+            
+            CMP x3, x0          // SI X3 != x0
+            BNE copyLoop
+
+            RET
+
+        //copia los valores de arrayAscii a array
+        copyArray2:
+            LDR x0, =count
+            LDR x0, [x0]        // length => cantidad de numeros leidos del csv
+            ldr x1, =arrayAscii
+            ldr x2, =array
+            
+            MOV x3, 0 
+
+        copyLoop2:
+
+            LDRH w4, [x1, x3, LSL 1]
+            STRH w4, [x2, x3, LSL 1]
+
+            ADD x3, x3, 1
+            
+            CMP x3, x0          // SI X3 != x0
+            BNE copyLoop2
+
+            RET
