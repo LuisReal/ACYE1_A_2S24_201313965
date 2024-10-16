@@ -18,6 +18,9 @@
         .asciz "201313965\n"
         lenEncabezado = . - encabezado
 
+    salto:  .asciz "\n"
+        lenSalto = .- salto
+
     espacio:  
         .asciz "  "
         lenEspacio = .- espacio
@@ -26,9 +29,12 @@
         .asciz "          A              B              C              D              E              F              G              H              I              J              K   \n"
         lenColumnsHeader = .- columns_header
 
+    value:  .asciz "0000000000000"
+        lenValue = .- value                         // guarda el valor de cada celda (UNICAMENTE 13 espacios)
+
     ingresarComando:
         .asciz ":"
-        lenIngresarComando = .- ingresarComando   // 2 puntos para pedir el ingreso del comando
+        lenIngresarComando = .- ingresarComando     // 2 puntos para pedir el ingreso del comando
 
     row:  
         .asciz "00"
@@ -40,6 +46,8 @@
     comando:
         .zero 50    // guarda el comando que ingresa el usuario
     
+    opcion:
+        .space 5
 
 .text
 _start:
@@ -53,6 +61,13 @@ _start:
         BL printCeldas
         BL getCommand
         
+    exit:
+
+        //B ingreso_comando
+        mov x0, 0
+        mov x8, 93
+        svc 0
+
     
     printCeldas:
         print columns_header, lenColumnsHeader
@@ -93,15 +108,54 @@ _start:
             
             // x11 Sera el contador de las filas
             mov x11, 11                     // Reiniciar el número de columnas
-    
+
+        printColumns:
+            // Guardar el número de columna en la pila
+            sub sp, sp, #16                 // Reserva espacio en la pila
+            str x11, [sp]                   // Almacena el valor del número de columnas en la pila
+
+            ldr x0, [x25, x26, lsl 3]       // Se carga el valor que tenga la matriz en dicha posicion, en el registro x0
+            ldr x1, =value                  
+            mov w7, 13                      // Largo del Buffer a limpiar
+            cleanValue                      // Se limpia el buffer del numero que se va a convertir
+
+            ldr x1, =value                  
+            mov x2, 13                      // imprime un cero antes si el numero es de un solo digito
+            stp x29, x30, [SP, -16]!        
+            bl itoa                         // Convierte el número a ASCII
+            ldp x29, x30, [SP], 16          
+            
+            print value, lenValue           // Se imprime el valor uno a uno de la matriz
+            print espacio, lenEspacio       
+
+            // Recuperar el número de columnas
+            ldr x11, [sp]                   // Cargar el valor de la columna en x11
+            add sp, sp, #16                 // Liberar el espacio de la pila para la columna
+
+            sub x11, x11, 1                 // Disminuir el número de columnas
+            cmp x11, 0                      // Comparar si se llega a 0
+            add  x26, x26, 1                // Aumenta el contador de celdas impresas
+            cbz x11, end_column             // Si es 0, finalizar impresión de columnas
+            b printColumns                  // Volver a imprimir la columna
+
+        end_column:
+
+            // Recuperar el número de filas
+            print salto, lenSalto
+            ldr x9, [sp]                    // Cargar el valor de la fila en x13
+            add sp, sp, #16                 // Libera el espacio de la pila para la fila
+
+            sub x9, x9, 1                   // Disminuir el número de filas
+            cmp x9, 0                       // Comparar con 0
+            cbz x9, end                     // Si es 0, finalizar impresión de filas
+
+            b printRows                     // imprimir la fila
+
+        end:
+            ret
+
     getCommand:
         print ingresarComando, lenIngresarComando
         read 0, comando, 50
         ret
 
-    exit:
-
-        //B ingreso_comando
-        mov x0, 0
-        mov x8, 93
-        svc 0

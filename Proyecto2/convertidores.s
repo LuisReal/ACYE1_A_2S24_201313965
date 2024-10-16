@@ -62,7 +62,7 @@ atoi:
 
     sub x5, x5, 1
     contarDigitos:
-        ldrd w1, [x12], 1       
+        ldrb w1, [x12], 1       
         cbz w1, convertir
         cmp w1, 32
         beq convertir
