@@ -146,7 +146,6 @@ archivoCSV:
     // cierra el archivo
     BL closeFile
 
-    
     B menu
 
 
