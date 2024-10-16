@@ -27,4 +27,13 @@
     SVC 0
 .endm
 
+// Limpia la variable value y la regresa a 13 ceros
+.macro cleanValue
+    MOV w6, 48
 
+    // etiqueta local
+    1:
+        STRB w6, [x1], 1
+        SUB w7, w7, 1
+        CBNZ w7, 1b
+.endm
