@@ -55,11 +55,14 @@ _start:
 
     print encabezado, lenEncabezado
     input
+    print clear, lenClear
     // imprime_hoja
     
     insert_command:
-        BL printCeldas
-        BL getCommand
+        bl printCeldas
+        bl getCommand
+
+        bl verifyCommand                    // verifica el tipo de comando ingresado
         
     exit:
 
@@ -159,3 +162,44 @@ _start:
         read 0, comando, 50
         ret
 
+    verifyCommand:
+        
+        ldr x0, =comando            // Se carga la direccion de memoria del comando
+        ldrb w20, [x0], 1           // Se carga el primer caracter en w20
+        cmp w20, #'G'               // Compara el carácter con 'G'
+        beq guardar                 // Si es igual, salta a guardar
+        b end_verify                // Si no encuentra ningun comando finaliza verificacion
+        
+        guardar:
+            ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
+            cmp w20, #'U'           
+            bne end_verify          // Si no es igual, salta a end_verificar
+
+            ldrb w20, [x0], 1
+            cmp w20, #'A'           
+            bne end_verify          // Si no es igual, salta a end_verificar
+
+            ldrb w20, [x0], 1
+            cmp w20, #'R'           
+            bne end_verify          // Si no es igual, salta a end_verificar
+            
+            ldrb w20, [x0], 1
+            cmp w20, #'D'           
+            bne end_verify          // Si no es igual, salta a end_verificar
+
+            ldrb w20, [x0], 1
+            cmp w20, #'A'           
+            bne end_verify          // Si no es igual, salta a end_verificar
+
+            ldrb w20, [x0], 1
+            cmp w20, #'R'           
+            bne end_verify          // Si no es igual, salta a end_verificar
+
+            ldrb w20, [x0], 1
+            cmp w20, #' '           
+            bne end_verify          // Si no es igual, salta a end_verificar
+
+            mov w4, 1               // (Comando Guardar encontrado)
+
+        end_verify:
+            ret
