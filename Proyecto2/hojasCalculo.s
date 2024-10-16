@@ -52,6 +52,15 @@
     num:
         .space 19   // guarda los parametros que ingrese el usuario (Numero, Celda o Retorno)
 
+    param1:
+        .skip 8         // Reservar 8 bytes (64 bits) sin inicializar
+    param2:
+        .skip 8         // Reservar 8 bytes (64 bits) sin inicializar
+
+    fila64:
+        .skip 8         // guarda fila que se este trabajando 
+
+
 .text
 _start:
     print clear, lenClear
@@ -70,7 +79,7 @@ _start:
         
         bl verifyParam                      // verifica el tipo de parametro (Numero, Celda o Retorno) y guarda el parametro
         ldr x8, =param1
-        bl parametroNumero
+        bl paramNumero
 
     exit:
 
@@ -285,3 +294,64 @@ _start:
         v_fin:
 
             ret
+
+    paramNumero:
+        
+        cmp w4, 01                      // Si el parametro es una celda
+        beq param_numero
+        cmp w4, 02                      // Si el parametro es una celda
+        beq param_celda
+        b retornar_param
+
+        param_numero:
+            // El numero de celda estara en w4
+            ldr x12, =num
+            ldr x5, =num
+
+            stp x29, x30, [SP, -16]!     
+            bl atoi
+            ldp x29, x30, [SP], 16  
+
+            b retornar_param
+
+        param_celda:
+            stp x29, x30, [SP, -16]!     
+            bl posicionCelda
+            ldp x29, x30, [SP], 16
+
+            adrp x25, tablero
+            add  x25, x25, :lo12:tablero // Suma el offset para la dirección completa
+            ldr  x2, [x25, x5]           // carga el valor que tenga la matriz en dicha posicion, en el registro x2
+            // LDR x8, =num64
+            str x2, [x8]
+
+        retornar_param:
+            ret
+
+    posicionCelda:
+        // row-major
+        
+        ldr x12, =num           // Se carga la direccion de memoria del parametro de la celda
+        ldrb w5, [x12], 1       // Se carga el primer valor que se espera sea la letra
+        sub w20, w5, 65         // Se resta 65 ya que se espera que sea una letra entre A-K
+        /* secuencia de las letras 
+        A=0
+        B=1
+        C=2
+        */
+        mov x5, x12             // Se carga el valor de la fila a x5
+
+        // Columna x20, fila x19
+        stp x29, x30, [SP, -16]!
+        ldr x8, =fila64         // Este parametro se envia unicamente porque lo pide la funcion sin embargo no se usara
+        bl atoi 
+        ldp x29, x30, [SP], 16
+        
+        sub x7, x7, 1           // De la funcion Atoi, se tiene que x7 tiene el resultado del numero convertido, se le resta 1
+        mov x19, x7             // Fila=x19
+
+        // row-Major
+        mov x5, 11              // 11 es el numero de columnas
+        mul x5, x5, x19         // x5 = x5 * x19 (el resultado se almacena en x5)
+        add x5, x5, x20         // x5=posicion final en nuestra matriz
+        ret
