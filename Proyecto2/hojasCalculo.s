@@ -8,6 +8,16 @@
         .asciz "\x1B[2J\x1B[H"
         lenClear = . - clear
     
+    encabezado:
+        .asciz "Universidad de San Carlos de Guatemala\n"
+        .asciz "Facultad de Ingenieria\n"
+        .asciz "Escuela de Ciencias y Sistemas\n"
+        .asciz "Arquitectura de Computadores y Ensambladores 1\n"
+        .asciz "Seccion A\n"
+        .asciz "Luis Fernando Gonzalez Real\n"
+        .asciz "201313965\n"
+        lenEncabezado = . - encabezado
+
     espacio:  
         .asciz "  "
         lenEspacio = .- espacio
@@ -35,6 +45,8 @@
 _start:
     print clear, lenClear
 
+    print encabezado, lenEncabezado
+    input
     // imprime_hoja
     
     insert_command:
@@ -86,3 +98,10 @@ _start:
         print ingresarComando, lenIngresarComando
         read 0, comando, 50
         ret
+
+    exit:
+
+        //B ingreso_comando
+        mov x0, 0
+        mov x8, 93
+        svc 0
