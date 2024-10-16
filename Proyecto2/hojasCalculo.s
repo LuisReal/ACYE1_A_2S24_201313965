@@ -66,8 +66,12 @@ _start:
         bl getCommand
 
         bl verifyCommand                    // verifica el tipo de comando ingresado
-        bl cleanParametro                   // limpia la variable num que que contiene los valores del parametro
+        bl cleanParam                       // limpia la variable num que que contiene los valores del parametro
         
+        bl verifyParam                      // verifica el tipo de parametro (Numero, Celda o Retorno) y guarda el parametro
+        ldr x8, =param1
+        bl parametroNumero
+
     exit:
 
         //B ingreso_comando
@@ -208,7 +212,7 @@ _start:
         end_verify:
             ret
 
-    cleanParametro:
+    cleanParam:
         adrp x1, num               // Carga la página base de 'num'
         add x1, x1, :lo12:num      // Obtener la dirección de 'num'
 
@@ -216,3 +220,68 @@ _start:
         mov w5, #0                 
         str w5, [x1]               
         ret
+
+    verifyParam:
+        // Retorna en w4, el tipo de parametro
+        //w4=1=numero        w4=2=celda
+
+        ldr x10, =num                   // Direccion en memoria donde se almacena el parametro
+        mov x4, 0                       // x4=tipo de parametro puede ser: Numero, Celda, Retorno
+                                    
+
+        celda_column:
+            ldrb w20, [x0], 1           // Se Carga en w20 lo que sigue del comando, se espera que ya sea algun parametro
+            add x4, x4, 1               // Numero de caracteres leidos se aumenta
+            cmp w20, #'A'                
+            blt analizar_numero_resta   // Si w20 < 'A', salta a evaluar el numero
+
+            cmp w20, #'K'               
+            bgt v_fin                   // Si w20 > 'K', salta fuera del rango (da error)
+            strb w20, [x10], 1          // Guardar la columna de la celda en num
+        
+        celda_row:
+            ldrb w20, [x0], 1           
+            add x4, x4, 1              
+
+            cmp w20, #' '               
+            beq retonar_celda           // Si w20 = ' ', salta a retornar celda
+
+            cmp w20, 10                 
+            beq retonar_celda           
+            cbz w20, retonar_celda      // Si w20 = '\0', salta a retornar celda
+
+            cmp w20, #'0'              
+            blt v_fin                   // Si w20 < '0', salta fuera del rango deberia de dar error
+
+            cmp w20, #'9'               
+            bgt v_fin                   // Si w20 > '9', salta fuera del rango deberia de dar error
+            strb w20, [x10], 1          // Guardar la fila de la celda en num
+            b celda_row                 // Sigue leyendo los numeros de la fila
+
+        analizar_numero_resta:
+            
+            sub x0, x0, x4
+            mov x4, 0                   // Se reinicia las lecturas que se estan haciendo
+
+        analizar_numero:
+            ldrb w20, [x0], 1
+            cmp w20, #' '              
+            beq retornar_numero         // Si es igual, salta a retornar_numero
+            cmp w20, #0                 
+            beq retornar_numero         // Si es igual, salta a retornar_numero
+
+            // valida que sean solo numeros
+            strb w20, [x10], 1
+            b analizar_numero
+
+        retornar_numero:
+            mov w4, 1
+            b v_fin
+
+        retonar_celda:
+            mov w4, 2
+            b v_fin
+
+        v_fin:
+
+            ret
