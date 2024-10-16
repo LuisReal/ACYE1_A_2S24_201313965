@@ -48,6 +48,9 @@
     
     opcion:
         .space 5
+    
+    num:
+        .space 19   // guarda los parametros que ingrese el usuario (Numero, Celda o Retorno)
 
 .text
 _start:
@@ -63,6 +66,7 @@ _start:
         bl getCommand
 
         bl verifyCommand                    // verifica el tipo de comando ingresado
+        bl cleanParametro                   // limpia la variable num que que contiene los valores del parametro
         
     exit:
 
@@ -203,3 +207,12 @@ _start:
 
         end_verify:
             ret
+
+    cleanParametro:
+        adrp x1, num               // Carga la página base de 'num'
+        add x1, x1, :lo12:num      // Obtener la dirección de 'num'
+
+        // Escribie 0's en 'num' para limpiarla
+        mov w5, #0                 
+        str w5, [x1]               
+        ret
