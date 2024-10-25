@@ -35,6 +35,10 @@
     ingresarComando:
         .asciz ":"
         lenIngresarComando = .- ingresarComando     // 2 puntos para pedir el ingreso del comando
+    
+    msgIngresarValor:
+        .asciz "Ingresar un valor para @@@:"
+        lenMsgIngresarValor = .- msgIngresarValor
 
     row:  
         .asciz "00"
@@ -46,11 +50,14 @@
     comando:
         .zero 50    // guarda el comando que ingresa el usuario
     
+    any_number:
+        .skip 20
+    
     opcion:
         .space 5
     
     num:
-        .space 19   // guarda los parametros que ingrese el usuario (Numero, Celda o Retorno)
+        .space 19   // guarda los parametros que ingrese el usuario (Numero, Celda o retorno)
 
     param1:
         .skip 8         // Reservar 8 bytes (64 bits) sin inicializar
@@ -83,7 +90,7 @@ _start:
         bl verifyCommand                    // verifica el tipo de comando ingresado
         bl cleanParam                       // limpia la variable num que que contiene los valores del parametro
         
-        bl verifyParam                      // verifica el tipo de parametro (Numero, Celda o Retorno) y guarda el parametro
+        bl verifyParam                      // verifica el tipo de parametro (Numero, Celda o retorno) y guarda el parametro
         ldr x8, =param1
         bl paramNumero
 
@@ -139,9 +146,9 @@ _start:
 
         llenar_columna_positivo:
             mov x0, 11
-            SDIV x4, x3, x0
-            // Multiplicar el cociente por el divisor
-            MUL x5, x4, x0       // x5 = x4 * x0
+            sdiv x4, x3, x0
+            // multiplicar el cociente por el divisor
+            mul x5, x4, x0       // x5 = x4 * x0
             // Restar el producto del dividendo para obtener el residuo
             sub x6, x3, x5       // x6 = x3 - (x4 * x0) (residuo)
             mov x3, x4
@@ -153,9 +160,9 @@ _start:
             b exit_programa
         llenar_columna_negativo:
             mov x0, 11
-            SDIV x4, x3, x0
-            // Multiplicar el cociente por el divisor
-            MUL x5, x4, x0       // x5 = x4 * x0
+            sdiv x4, x3, x0
+            // multiplicar el cociente por el divisor
+            mul x5, x4, x0       // x5 = x4 * x0
             // Restar el producto del dividendo para obtener el residuo
             sub x6, x3, x5       // x6 = x3 - (x4 * x0) (residuo)
             mov x3, x4
@@ -177,7 +184,7 @@ _start:
         mov x8, 93
         svc 0
     exit:
-        bL printCeldas
+        bl printCeldas
         mov x0, 0
         mov x8, 93
         svc 0
@@ -273,6 +280,15 @@ _start:
         read 0, comando, 50
         ret
 
+    getNumber:
+        adr x6, any_number
+        mov x7, 0
+        str x7, [x6]
+        print msgIngresarValor, lenMsgIngresarValor
+        read 0, any_number, 20
+
+        ret
+
     verifyCommand:
         
         ldr x0, =comando            // Se carga la direccion de memoria del comando
@@ -325,11 +341,11 @@ _start:
         ret
 
     verifyParam:
-        // Retorna en w4, el tipo de parametro
+        // retorna en w4, el tipo de parametro
         //w4=1=numero        w4=2=celda
 
         ldr x10, =num                   // Direccion en memoria donde se almacena el parametro
-        mov x4, 0                       // x4=tipo de parametro puede ser: Numero, Celda, Retorno
+        mov x4, 0                       // x4=tipo de parametro puede ser: Numero, Celda, retorno
                                     
 
         celda_column:
@@ -404,7 +420,7 @@ _start:
             ldr x12, =num
             ldr x5, =num
             stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
-            bL atoi
+            bl atoi
             ldp x29, x30, [SP], 16       // Restaurar x29 y x30 después de la llamada
             b retornar_param
 
@@ -461,7 +477,7 @@ _start:
 
     verificarPalabraIntermedia:
 
-        // Retorna en w4, el tipo de palabra intermedia
+        // retorna en w4, el tipo de palabra intermedia
         ldrb w20, [x0], #1     // Se carga el valor de memoria de x0 en w20
         cmp w20, #'E'           
         beq palabra_en         
@@ -565,3 +581,75 @@ _start:
 
         fin_verificar:
             ret
+    
+    posicionACelda:
+
+        mov x22, 11
+        sdiv x21, x20, x22
+
+        // multiplicar el cociente por el divisor
+        mul x23, x21, x22       // x23 = x21 * x22
+
+        // Restar el producto del dividendo para obtener el residuo
+        sub x24, x20, x23       // x24 = x20 - (x21 * x22) (residuo)
+        
+        // Columna
+        add w1, w24, 65
+        // mov w1, w21
+        adr x5, msgIngresarValor
+        strb w1, [x5, #23]
+
+        // Fila
+        add x21, x21, 1
+        mov x22, 10
+        sdiv x19, x21, x22
+
+        add w1, w19, 48
+        strb w1, [x5, #24]
+
+        // multiplicar el cociente por el divisor
+        mul x23, x19, x22       // x23 = x21 * x22
+
+        // Restar el producto del dividendo para obtener el residuo
+        sub x24, x21, x23       // x24 = x20 - (x21 * x22) (residuo)
+        add w1, w24, 48
+        strb w1, [x5, #25]
+
+        ret
+
+    llenarFilaColumna:
+        // x27: cuanto se va a sumar o restar para avanzar en la matriz
+        // x3: cantidad de veces que se repite el bucle
+        adrp x25, tablero
+        add  x25, x25, :lo12:tablero       // Sumar el offset para la dirección completa
+
+        loop_llenar:
+            adr x4, posicion_param1
+            ldr w20, [x4]
+            
+            stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
+            bl posicionACelda
+            ldp x29, x30, [SP], 16       // Restaurar x29 y x30 después de la llamada
+
+            stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
+            bl getNumber
+            ldp x29, x30, [SP], 16       // Restaurar x29 y x30 después de la llamada
+            ldr x12, =any_number 
+            ldr x5, =any_number 
+            ldr x8, =fila64
+            stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
+            bl atoi
+            ldp x29, x30, [SP], 16       // Restaurar x29 y x30 después de la llamada
+
+            // mov x9, 122
+            str  x7, [x25, x20, lsl 3]
+
+            adr x4, posicion_param1
+            ldr w20, [x4]
+            add w20, w20, w27
+            strb w20, [x4]
+
+            sub x3, x3, 1
+            cmp x3, 0
+            bge loop_llenar
+        ret
