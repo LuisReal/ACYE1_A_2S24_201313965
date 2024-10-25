@@ -1,6 +1,8 @@
 .include "macros.s"
 .include "convertidores.s"
 .include "verificarComando.s"
+.include "palabraIntermedia.s"
+.include "importar.s"
 
 .global itoa
 .global atoi
@@ -52,6 +54,30 @@
         .asciz "0\n"
     prueba:  
         .asciz "9223372036854775807\0"
+    
+    imp:
+        .asciz "IMPORTAR"
+
+    sep:
+        .asciz "SEPARADO POR TABULADOR"
+
+    errorImport:
+        .asciz "Error En El Comando De Importación"
+        lenError = .- errorImport
+
+    errorOpenFile:
+        .asciz "Error al abrir el archivo\n"
+        lenErrOpenFile = .- errorOpenFile
+
+    getIndexMsg:
+        .asciz "Ingrese la columna para el encabezado "
+        lenGetIndexMsg = .- getIndexMsg
+
+    msgSuccess:
+        .asciz "El Archivo Se Ha Leido Correctamente\n"
+        lenMsgSuccess = .- msgSuccess
+
+    
 
 .bss
 
@@ -91,6 +117,8 @@
     num:
         .space 19   // guarda los parametros que ingrese el usuario (Numero, Celda o retorno)
 
+    filename:
+        .space 100
 
 .text
 
@@ -227,11 +255,16 @@ verifyParam:
     celda_column:
         ldrb w20, [x0], 1           // Se Carga en w20 lo que sigue del comando, se espera que ya sea algun parametro
         add x4, x4, 1               // Numero de caracteres leidos se aumenta
+        
+        cmp w20, 10
+        beq retonar_archivo
+        
         cmp w20, #'A'                
         blt analizar_numero_resta   // Si w20 < 'A', salta a evaluar el numero
 
         cmp w20, #'K'               
-        bgt analizar_archivo_resta                   // Si w20 > 'K', salta fuera del rango (da error)
+        bgt analizar_archivo_resta  // Si w20 > 'K', salta fuera del rango (da error)
+        
         strb w20, [x10], 1          // Guardar la columna de la celda en num
     
     celda_row:
@@ -246,10 +279,11 @@ verifyParam:
         cbz w20, retonar_celda      // Si w20 = '\0', salta a retornar celda
 
         cmp w20, #'0'              
-        blt analizar_archivo_resta                   // Si w20 < '0', salta fuera del rango deberia de dar error
+        blt analizar_archivo_resta  // Si w20 < '0', salta fuera del rango deberia de dar error
 
         cmp w20, #'9'               
-        bgt analizar_archivo_resta                   // Si w20 > '9', salta fuera del rango deberia de dar error
+        bgt analizar_archivo_resta  // Si w20 > '9', salta fuera del rango deberia de dar error
+        
         strb w20, [x10], 1          // Guardar la fila de la celda en num
         b celda_row                 // Sigue leyendo los numeros de la fila
 
@@ -263,7 +297,8 @@ verifyParam:
         ldrb w20, [x0], 1
         cmp w20, #' '              
         beq retornar_numero         // Si es igual, salta a retornar_numero
-        cmp w20, #0                 
+        
+        cmp w20, 10                 
         beq retornar_numero         // Si es igual, salta a retornar_numero
 
         // valida que sean solo numeros
@@ -278,18 +313,18 @@ verifyParam:
         ldr x10, =num
 
     analizar_archivo:
-        ldrb w20, [x0], #1  // Se carga el siguiente caracter del comando
-        add x4, x4, 1   // Nuevamente se aumenta la cantidad de caracteres leidos
+        ldrb w20, [x0], #1          // Se carga el siguiente caracter del comando
+        add x4, x4, 1               // Nuevamente se aumenta la cantidad de caracteres leidos
 
-        cmp w20, #' '             // Compara w20 con ' ' (65 en ASCII)
-        beq retonar_archivo        // Si w20 = ' ', salta a retornar celda
-        cmp w20, 10             // Compara w20 con '\10' (65 en ASCII)
-        beq retonar_archivo        // Si w20 = '\10', salta a retornar celda
-        cbz w20, retonar_archivo // Si w20 = '\0', salta a retornar celda
+        cmp w20, #' '               // Compara w20 con ' ' (65 en ASCII)
+        beq retonar_archivo         // Si w20 = ' ', salta a retornar archivo
+        cmp w20, 10                 // Compara w20 con '\10' (65 en ASCII)
+        beq retonar_archivo         // Si w20 = '\10', salta a retornar archivo
+        cbz w20, retonar_archivo    // Si w20 = '\0', salta a retornar archivo
 
-        strb w20, [x10], 1 // Guardar la fila de la celda en num
-        add x4, x4, 1   // Numero de caracteres leidos se aumenta
-        b analizar_archivo  // Sigue leyendo los numeros de la fila
+        strb w20, [x10], 1          // Guardar las letras del nombre del archivo.csv
+        add x4, x4, 1               // Numero de caracteres leidos se aumenta
+        b analizar_archivo          // Sigue leyendo las letras del nombre del archivo.csv
 
     retornar_numero:
         mov w4, 1
@@ -307,115 +342,6 @@ verifyParam:
 
         ret
 
-verificarPalabraIntermedia:
-
-    // retorna en w4, el tipo de palabra intermedia
-    ldrb w20, [x0], #1     // Se carga el valor de memoria de x0 en w20
-    cmp w20, #'E'           
-    beq palabra_en         
-    cmp w20, #'H'          // Compara el carácter con 'H'
-    beq palabra_hasta      
-    cmp w20, #'S'          // Compara el carácter con 'S'
-    beq separado_por       
-    
-    b end_verify_intermedia
-
-    
-    palabra_en:
-    
-        ldrb w20, [x0], #1
-        cmp w20, #'N'        
-        bne end_verify_intermedia    
-
-        ldrb w20, [x0], #1
-        cmp w20, #' '        
-        bne end_verify_intermedia    
-
-        mov w4, 1           // w4=1 palabra intermedia EN encontrada
-        b end_verify_intermedia
-
-
-    palabra_hasta:
-
-        ldrb w20, [x0], #1
-        cmp w20, #'A'          
-        bne end_verify_intermedia            
-
-        ldrb w20, [x0], #1
-        cmp w20, #'S'          
-        bne end_verify_intermedia            
-
-        ldrb w20, [x0], #1
-        cmp w20, #'T'          
-        bne end_verify_intermedia            
-
-        ldrb w20, [x0], #1
-        cmp w20, #'A'          
-        bne end_verify_intermedia            
-
-        ldrb w20, [x0], #1
-        cmp w20, #' '          
-        bne end_verify_intermedia            
-
-        mov w4, 2                   // w4=2 palabra intermedia HASTA encontrada
-        b end_verify_intermedia
-
-
-    separado_por:
-
-        ldrb w20, [x0], #1
-        cmp w20, #'E'           
-        bne end_verify_intermedia       
-
-        ldrb w20, [x0], #1
-        cmp w20, #'P'           
-        bne end_verify_intermedia       
-
-        ldrb w20, [x0], #1
-        cmp w20, #'A'            
-        bne end_verify_intermedia        
-
-        ldrb w20, [x0], #1
-        cmp w20, #'R'            
-        bne end_verify_intermedia        
-
-        ldrb w20, [x0], #1
-        cmp w20, #'A'            
-        bne end_verify_intermedia        
-
-        ldrb w20, [x0], #1
-        cmp w20, #'D'            
-        bne end_verify_intermedia        
-
-        ldrb w20, [x0], #1
-        cmp w20, #'O'            
-        bne end_verify_intermedia        
-
-        ldrb w20, [x0], #1
-        cmp w20, #' '            
-        bne end_verify_intermedia        
-
-        ldrb w20, [x0], #1
-        cmp w20, #'P'            
-        bne end_verify_intermedia        
-
-        ldrb w20, [x0], #1
-        cmp w20, #'O'            
-        bne end_verify_intermedia        
-
-        ldrb w20, [x0], #1
-        cmp w20, #'R'            
-        bne end_verify_intermedia        
-
-        ldrb w20, [x0], #1
-        cmp w20, #' '            
-        bne end_verify_intermedia        
-
-        mov w4, 3               // w4=3 palabra intermedia SEPARADO POR encontrada
-        b end_verify_intermedia
-
-    end_verify_intermedia:
-        ret
 
 getCommand:
     print ingresarComando, lenIngresarComando
@@ -434,11 +360,11 @@ getNumber:
 
 paramNumero:
     
-    cmp w4, 01  // Si el parametro es una celda
+    cmp w4, 01  // Si el parametro es un numero
     beq param_numero
     cmp w4, 02  // Si el parametro es una celda
     beq param_celda
-    cmp w4, 04  // Si el parametro es una celda
+    cmp w4, 04  // Si el parametro es un archivo
     beq param_texto
     b retornar_param
 
@@ -549,7 +475,8 @@ llenarFilaColumna:
         cmp x3, 0
         bge loop_llenar
     ret
-
+//---------------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------
 _start:
     print clear, lenClear
 
@@ -594,6 +521,8 @@ _start:
         
         B exit
 
+//---------------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------
 
     concluir_guardar:
         
@@ -671,7 +600,11 @@ _start:
             b exit_programa
 
     concluir_importar:
-        print param1, 5
+        //print param1, 5
+        bl p_import
+
+        bl imp_data
+
         b exit
 
     exit_programa:
