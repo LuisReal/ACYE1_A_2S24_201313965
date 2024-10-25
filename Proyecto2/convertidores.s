@@ -1,3 +1,4 @@
+
 itoa:
     
     mov x8, 0           // contador de numeros
@@ -66,6 +67,9 @@ atoi:
         cbz w1, convertir
         cmp w1, 32
         beq convertir
+        cmp w1, 10
+        beq convertir
+
         b contarDigitos
 
     convertir:
