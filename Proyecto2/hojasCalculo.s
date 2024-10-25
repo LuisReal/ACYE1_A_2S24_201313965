@@ -5,7 +5,7 @@
 
 .data
     clear:
-        .asciz "\x1B[2J\x1B[H"
+        .asciz "\x1b[2J\x1b[H"
         lenClear = . - clear
     
     encabezado:
@@ -26,7 +26,7 @@
         lenEspacio = .- espacio
     
     columns_header:
-        .asciz "          A              B              C              D              E              F              G              H              I              J              K   \n"
+        .asciz "          A              b              C              D              E              F              G              H              I              J              K   \n"
         lenColumnsHeader = .- columns_header
 
     value:  .asciz "0000000000000"
@@ -57,6 +57,12 @@
     param2:
         .skip 8         // Reservar 8 bytes (64 bits) sin inicializar
 
+    posicion_param1:
+        .skip 1
+
+    posicion_param2:
+        .skip 2
+
     fila64:
         .skip 8         // guarda fila que se este trabajando 
 
@@ -82,10 +88,96 @@ _start:
         bl paramNumero
 
         bl verificarPalabraIntermedia
+        bl cleanParam
 
+        // segundo parametro
+        bl verifyParam
+        ldr x8, =param2
+        bl paramNumero
+
+    concluir_guardar:
+        bl posicionCelda
+        ldr x8, =param1
+        ldr x9, [x8]
+        ldr x11, =param2
+        ldr x10, [x11]
+
+        adrp x25, tablero
+        add  x25, x25, :lo12:tablero       // Sumar el offset para la dirección completa
+        str  x9, [x25, x5, lsl 3]
+
+    concluir_llenar:
+
+        adr x2, posicion_param1
+        ldrb w0, [x2]
+        adr x3, posicion_param2
+        ldrb w1, [x3]
+        sub x3, x1, x0
+        cmp x3, 0
+        bgt llenar_fila_positivo
+        cmp x3, 0
+        blt llenar_fila_negativo
+        b exit_programa
+
+        llenar_fila_positivo:
+
+            cmp x3, 10
+            bgt llenar_columna_positivo
+
+            mov w27, 1
+            bl llenarFilaColumna
+            b exit_programa
+
+        llenar_fila_negativo:
+            cmp x3, -10
+            blt llenar_columna_negativo
+
+            neg x3, x3
+            mov w27, -1
+            bl llenarFilaColumna
+            b exit_programa
+
+        llenar_columna_positivo:
+            mov x0, 11
+            SDIV x4, x3, x0
+            // Multiplicar el cociente por el divisor
+            MUL x5, x4, x0       // x5 = x4 * x0
+            // Restar el producto del dividendo para obtener el residuo
+            sub x6, x3, x5       // x6 = x3 - (x4 * x0) (residuo)
+            mov x3, x4
+            cmp x6, 0
+            bne final
+
+            mov w27, 11
+            bl llenarFilaColumna
+            b exit_programa
+        llenar_columna_negativo:
+            mov x0, 11
+            SDIV x4, x3, x0
+            // Multiplicar el cociente por el divisor
+            MUL x5, x4, x0       // x5 = x4 * x0
+            // Restar el producto del dividendo para obtener el residuo
+            sub x6, x3, x5       // x6 = x3 - (x4 * x0) (residuo)
+            mov x3, x4
+            cmp x6, 0
+            bne final
+
+            neg x3, x3
+            mov w27, -11
+            bl llenarFilaColumna
+            b exit_programa
+
+    concluir_importar:
+        print param1, 5
+        b final
+
+    exit_programa:
+        b insert_command
+        mov x0, 0
+        mov x8, 93
+        svc 0
     exit:
-
-        //B ingreso_comando
+        bL printCeldas
         mov x0, 0
         mov x8, 93
         svc 0
@@ -104,7 +196,7 @@ _start:
             
             mov x0, 24                      
             ldr x1, =row                    // almacenara el numero convertido
-            mov w7, 2                       // Largo del Buffer a limpiar
+            mov w7, 2                       // Largo del buffer a limpiar
             cleanValue
             ldr x1, =row
             mov x2, 2                       // Tamaño del buffer, sirve para que imprima un cero antes si el numero es de un solo digito
@@ -138,7 +230,7 @@ _start:
 
             ldr x0, [x25, x26, lsl 3]       // Se carga el valor que tenga la matriz en dicha posicion, en el registro x0
             ldr x1, =value                  
-            mov w7, 13                      // Largo del Buffer a limpiar
+            mov w7, 13                      // Largo del buffer a limpiar
             cleanValue                      // Se limpia el buffer del numero que se va a convertir
 
             ldr x1, =value                  
@@ -299,33 +391,42 @@ _start:
 
     paramNumero:
         
-        cmp w4, 01                      // Si el parametro es una celda
+        cmp w4, 01  // Si el parametro es una celda
         beq param_numero
-        cmp w4, 02                      // Si el parametro es una celda
+        cmp w4, 02  // Si el parametro es una celda
         beq param_celda
+        cmp w4, 04  // Si el parametro es una celda
+        beq param_texto
         b retornar_param
 
         param_numero:
             // El numero de celda estara en w4
             ldr x12, =num
             ldr x5, =num
-
-            stp x29, x30, [SP, -16]!     
-            bl atoi
-            ldp x29, x30, [SP], 16  
-
+            stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
+            bL atoi
+            ldp x29, x30, [SP], 16       // Restaurar x29 y x30 después de la llamada
             b retornar_param
 
         param_celda:
-            stp x29, x30, [SP, -16]!     
+            str x8, [sp, #-16]!  // Decrementa el puntero de la pila y guarda x8 en la pila
+            stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
             bl posicionCelda
             ldp x29, x30, [SP], 16
+            ldr x8, [sp], #16   // Carga x8 desde la pila y luego incrementa el puntero de la pila
+            str x5, [x9]
 
             adrp x25, tablero
-            add  x25, x25, :lo12:tablero // Suma el offset para la dirección completa
-            ldr  x2, [x25, x5]           // carga el valor que tenga la matriz en dicha posicion, en el registro x2
-            // LDR x8, =num64
+            add  x25, x25, :lo12:tablero       // Sumar el offset para la dirección completa
+            ldr  x2, [x25, x5, lsl 3]  // Se carga el valor que tenga nuestra matriz en dicha posicion, en el registro x0
             str x2, [x8]
+            b retornar_param
+
+        param_texto:
+            ldr x12, =num
+            ldr x13, [x12]
+            str x13, [x8]
+            b retornar_param
 
         retornar_param:
             ret
@@ -338,7 +439,7 @@ _start:
         sub w20, w5, 65         // Se resta 65 ya que se espera que sea una letra entre A-K
         /* secuencia de las letras 
         A=0
-        B=1
+        b=1
         C=2
         */
         mov x5, x12             // Se carga el valor de la fila a x5
@@ -410,7 +511,7 @@ _start:
             b fin_verificar
 
         separado_por:
-        
+
             ldrb w20, [x0], #1
             cmp w20, #'E'           
             bne fin_verificar       
@@ -460,7 +561,7 @@ _start:
             bne fin_verificar        
 
             mov w4, 3               // w4=3 palabra intermedia SEPARADO POR encontrada
-            B fin_verificar
+            b fin_verificar
 
         fin_verificar:
             ret
