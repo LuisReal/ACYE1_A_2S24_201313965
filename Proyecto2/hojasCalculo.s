@@ -1,5 +1,6 @@
 .include "macros.s"
 .include "convertidores.s"
+.include "verificarComando.s"
 
 .global _start
 
@@ -289,146 +290,6 @@ _start:
 
         ret
 
-    verifyCommand:
-        
-        ldr x0, =comando            // Se carga la direccion de memoria del comando
-        ldrb w20, [x0], 1           // Se carga el primer caracter en w20
-        
-        cmp w20, #'G'               // Compara el carácter con 'G'
-        beq guardar                 // Si es igual, salta a guardar
-        
-        cmp w20, #'L'
-        beq llenar                  // Si es igual, salta a llenar
-        
-        cmp w20, #'I'               // Compara el carácter con 'I'
-        beq importar                // Si es igual, salta a importar
-        
-        b end_verify                // Si no encuentra ningun comando finaliza verificacion
-        
-        guardar:
-            ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
-            cmp w20, #'U'           
-            bne end_verify          // Si no es igual, salta a end_verificar
-
-            ldrb w20, [x0], 1
-            cmp w20, #'A'           
-            bne end_verify          // Si no es igual, salta a end_verificar
-
-            ldrb w20, [x0], 1
-            cmp w20, #'R'           
-            bne end_verify          // Si no es igual, salta a end_verificar
-            
-            ldrb w20, [x0], 1
-            cmp w20, #'D'           
-            bne end_verify          // Si no es igual, salta a end_verificar
-
-            ldrb w20, [x0], 1
-            cmp w20, #'A'           
-            bne end_verify          // Si no es igual, salta a end_verificar
-
-            ldrb w20, [x0], 1
-            cmp w20, #'R'           
-            bne end_verify          // Si no es igual, salta a end_verificar
-
-            ldrb w20, [x0], 1
-            cmp w20, #' '           
-            bne end_verify          // Si no es igual, salta a end_verificar
-
-            mov w4, 1               // (Comando Guardar encontrado)
-            B end_verify     // Si no encuentra ningun comando marcar error
-
-        llenar:
-            ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
-            cmp w20, #'L'          // Compara el carácter con 'U'
-            bne end_verify           // Si no es igual, salta a end_verify
-
-            ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
-            cmp w20, #'E'          // Compara el carácter con 'U'
-            bne end_verify           // Si no es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #'N'          // Compara el carácter con 'A'
-            bne end_verify           // Si es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #'A'          // Compara el carácter con 'A'
-            bne end_verify           // Si es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #'R'          // Compara el carácter con 'R'
-            bne end_verify           // Si es igual, salta a end_verify
-            
-            ldrb w20, [x0], #1
-            cmp w20, #' '          // Compara el carácter con ' '
-            bne end_verify           // Si es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #'D'          // Compara el carácter con ' '
-            bne end_verify           // Si es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #'E'          // Compara el carácter con ' '
-            bne end_verify           // Si es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #'S'          // Compara el carácter con ' '
-            bne end_verify           // Si es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #'D'          // Compara el carácter con ' '
-            bne end_verify           // Si es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #'E'          // Compara el carácter con ' '
-            bne end_verify           // Si es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #' '          // Compara el carácter con ' '
-            bne end_verify           // Si es igual, salta a end_verify
-
-            mov w4, 11   // w4=11 (Comando Llenar encontrado)
-            b end_verify     // Si no encuentra ningun comando marcar error
-            
-        importar:
-            ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
-            cmp w20, #'M'          // Compara el carácter con 'U'
-            bne end_verify           // Si no es igual, salta a end_verify
-
-            ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
-            cmp w20, #'P'          // Compara el carácter con 'U'
-            bne end_verify           // Si no es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #'O'          // Compara el carácter con 'A'
-            bne end_verify           // Si es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #'R'          // Compara el carácter con 'A'
-            bne end_verify           // Si es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #'T'          // Compara el carácter con 'R'
-            bne end_verify           // Si es igual, salta a end_verify
-            
-            ldrb w20, [x0], #1
-            cmp w20, #'A'          // Compara el carácter con ' '
-            bne end_verify           // Si es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #'R'          // Compara el carácter con ' '
-            bne end_verify           // Si es igual, salta a end_verify
-
-            ldrb w20, [x0], #1
-            cmp w20, #' '          // Compara el carácter con ' '
-            bne end_verify           // Si es igual, salta a end_verify
-
-            MOV w4, 15   // w4=15 (Comando Importar encontrado)
-            B end_verify     // Si no encuentra ningun comando marcar error
-    
-
-        end_verify:
-            ret
-
     cleanParam:
         adrp x1, num               // Carga la página base de 'num'
         add x1, x1, :lo12:num      // Obtener la dirección de 'num'
@@ -491,6 +352,26 @@ _start:
             strb w20, [x10], 1
             b analizar_numero
 
+        analizar_archivo_resta:
+            // Se debe restar lo que se leyo antes para que pueda leer el numero completo en caso sea numero
+            sub x0, x0, x4
+            mov x4, 0 // Se reinicia las lecturas que se estan haciendo
+            ldr x10, =num
+
+        analizar_archivo:
+            ldrb w20, [x0], #1  // Se carga el siguiente caracter del comando
+            add x4, x4, 1   // Nuevamente se aumenta la cantidad de caracteres leidos
+
+            cmp w20, #' '             // Compara w20 con ' ' (65 en ASCII)
+            beq retonar_archivo        // Si w20 = ' ', salta a retornar celda
+            cmp w20, 10             // Compara w20 con '\10' (65 en ASCII)
+            beq retonar_archivo        // Si w20 = '\10', salta a retornar celda
+            cbz w20, retonar_archivo // Si w20 = '\0', salta a retornar celda
+
+            strb w20, [x10], 1 // Guardar la fila de la celda en num
+            add x4, x4, 1   // Numero de caracteres leidos se aumenta
+            b analizar_archivo  // Sigue leyendo los numeros de la fila
+
         retornar_numero:
             mov w4, 1
             b v_fin
@@ -498,10 +379,15 @@ _start:
         retonar_celda:
             mov w4, 2
             b v_fin
+        
+        retonar_archivo:
+            mov w4, 4
+            b v_fin
 
         v_fin:
 
             ret
+
 
     paramNumero:
         
