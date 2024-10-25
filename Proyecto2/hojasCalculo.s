@@ -81,6 +81,8 @@ _start:
         ldr x8, =param1
         bl paramNumero
 
+        bl verificarPalabraIntermedia
+
     exit:
 
         //B ingreso_comando
@@ -346,7 +348,7 @@ _start:
         ldr x8, =fila64         // Este parametro se envia unicamente porque lo pide la funcion sin embargo no se usara
         bl atoi 
         ldp x29, x30, [SP], 16
-        
+
         sub x7, x7, 1           // De la funcion Atoi, se tiene que x7 tiene el resultado del numero convertido, se le resta 1
         mov x19, x7             // Fila=x19
 
@@ -355,3 +357,57 @@ _start:
         mul x5, x5, x19         // x5 = x5 * x19 (el resultado se almacena en x5)
         add x5, x5, x20         // x5=posicion final en nuestra matriz
         ret
+
+    verificarPalabraIntermedia:
+
+        // Retorna en w4, el tipo de palabra intermedia
+        ldrb w20, [x0], #1     // Se carga el valor de memoria de x0 en w20
+        cmp w20, #'E'          // Compara el carácter con 'E'
+        beq palabra_en         
+        cmp w20, #'H'          // Compara el carácter con 'H'
+        beq palabra_hasta      
+        cmp w20, #'S'          // Compara el carácter con 'S'
+        beq separado_por       
+        
+        b fin_verificar
+        
+        palabra_en:
+        
+            ldrb w20, [x0], #1
+            cmp w20, #'N'       // Compara el carácter con 'E'
+            bne fin_verificar   // Si es igual, salta a fin_verificar_intermedia
+
+            ldrb w20, [x0], #1
+            cmp w20, #' '       // Compara el carácter con 'E'
+            bne fin_verificar   // Si es igual, salta a fin_verificar_intermedia
+
+            mov w4, 1           // w4=1 palabra intermedia EN encontrada
+            b fin_verificar
+
+        palabra_hasta:
+
+            ldrb w20, [x0], #1
+            cmp w20, #'A'          
+            bne fin_verificar           // Si es igual, salta a fin_verificar_intermedia
+
+            ldrb w20, [x0], #1
+            cmp w20, #'S'          
+            bne fin_verificar           // Si es igual, salta a fin_verificar_intermedia
+
+            ldrb w20, [x0], #1
+            cmp w20, #'T'          
+            bne fin_verificar           // Si es igual, salta a fin_verificar_intermedia
+
+            ldrb w20, [x0], #1
+            cmp w20, #'A'          
+            bne fin_verificar           // Si es igual, salta a fin_verificar_intermedia
+
+            ldrb w20, [x0], #1
+            cmp w20, #' '          
+            bne fin_verificar           // Si es igual, salta a fin_verificar_intermedia
+
+            mov w4, 2                   // w4=2 palabra intermedia HASTA encontrada
+            b fin_verificar
+
+        fin_verificar:
+            ret
