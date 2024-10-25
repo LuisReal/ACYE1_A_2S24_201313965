@@ -362,7 +362,7 @@ _start:
 
         // Retorna en w4, el tipo de palabra intermedia
         ldrb w20, [x0], #1     // Se carga el valor de memoria de x0 en w20
-        cmp w20, #'E'          // Compara el carácter con 'E'
+        cmp w20, #'E'           
         beq palabra_en         
         cmp w20, #'H'          // Compara el carácter con 'H'
         beq palabra_hasta      
@@ -374,12 +374,12 @@ _start:
         palabra_en:
         
             ldrb w20, [x0], #1
-            cmp w20, #'N'       // Compara el carácter con 'E'
-            bne fin_verificar   // Si es igual, salta a fin_verificar_intermedia
+            cmp w20, #'N'        
+            bne fin_verificar    
 
             ldrb w20, [x0], #1
-            cmp w20, #' '       // Compara el carácter con 'E'
-            bne fin_verificar   // Si es igual, salta a fin_verificar_intermedia
+            cmp w20, #' '        
+            bne fin_verificar    
 
             mov w4, 1           // w4=1 palabra intermedia EN encontrada
             b fin_verificar
@@ -388,26 +388,79 @@ _start:
 
             ldrb w20, [x0], #1
             cmp w20, #'A'          
-            bne fin_verificar           // Si es igual, salta a fin_verificar_intermedia
+            bne fin_verificar            
 
             ldrb w20, [x0], #1
             cmp w20, #'S'          
-            bne fin_verificar           // Si es igual, salta a fin_verificar_intermedia
+            bne fin_verificar            
 
             ldrb w20, [x0], #1
             cmp w20, #'T'          
-            bne fin_verificar           // Si es igual, salta a fin_verificar_intermedia
+            bne fin_verificar            
 
             ldrb w20, [x0], #1
             cmp w20, #'A'          
-            bne fin_verificar           // Si es igual, salta a fin_verificar_intermedia
+            bne fin_verificar            
 
             ldrb w20, [x0], #1
             cmp w20, #' '          
-            bne fin_verificar           // Si es igual, salta a fin_verificar_intermedia
+            bne fin_verificar            
 
             mov w4, 2                   // w4=2 palabra intermedia HASTA encontrada
             b fin_verificar
+
+        separado_por:
+        
+            ldrb w20, [x0], #1
+            cmp w20, #'E'           
+            bne fin_verificar       
+
+            ldrb w20, [x0], #1
+            cmp w20, #'P'           
+            bne fin_verificar       
+
+            ldrb w20, [x0], #1
+            cmp w20, #'A'            
+            bne fin_verificar        
+
+            ldrb w20, [x0], #1
+            cmp w20, #'R'            
+            bne fin_verificar        
+
+            ldrb w20, [x0], #1
+            cmp w20, #'A'            
+            bne fin_verificar        
+
+            ldrb w20, [x0], #1
+            cmp w20, #'D'            
+            bne fin_verificar        
+
+            ldrb w20, [x0], #1
+            cmp w20, #'O'            
+            bne fin_verificar        
+
+            ldrb w20, [x0], #1
+            cmp w20, #' '            
+            bne fin_verificar        
+
+            ldrb w20, [x0], #1
+            cmp w20, #'P'            
+            bne fin_verificar        
+
+            ldrb w20, [x0], #1
+            cmp w20, #'O'            
+            bne fin_verificar        
+
+            ldrb w20, [x0], #1
+            cmp w20, #'R'            
+            bne fin_verificar        
+
+            ldrb w20, [x0], #1
+            cmp w20, #' '            
+            bne fin_verificar        
+
+            mov w4, 3               // w4=3 palabra intermedia SEPARADO POR encontrada
+            B fin_verificar
 
         fin_verificar:
             ret
