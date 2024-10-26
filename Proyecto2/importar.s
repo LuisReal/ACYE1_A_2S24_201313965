@@ -49,6 +49,67 @@ p_import:  //proc_import
         ret
 
 
+imp_data:
+    ldr x1, =filename
+    stp x29, x30, [SP, -16]!
+    bl openFile
+    ldp x29, x30, [SP], 16
+
+    ldr x25, =buffer
+    mov x10, 0
+    ldr x11, =fileDescriptor
+    ldr x11, [x11]
+    mov x17, 0 //contador de columnas
+    ldr x15, =listIndex
+
+    read_head:
+        read x11, character, 1
+        ldr x4, =character
+        ldrB w2, [x4]
+
+        cmp w2, 44
+        beq getIndex
+
+        cmp w2, 10
+        beq getIndex
+
+        strb w2, [x25], 1
+        add x10, x10, 1
+        B read_head
+
+        getIndex:
+            print getIndexMsg, lenGetIndexMsg
+            print buffer, x10
+            print dospuntos, lenDospuntos
+            print espacio, lenEspacio
+
+            ldr x4, =character
+            ldrB w7, [x4]
+
+            read 0, character, 2
+
+            ldr x4, =character
+            ldrB w2, [x4]
+            sub w2, w2, 65
+            
+            strb w2, [x15], 1
+            add x17, x17, 1
+
+            cmp w7, 10
+            beq end_header
+
+            ldr x25, =buffer
+            mov x10, 0
+            B read_head
+
+        end_header:
+            stp x29, x30, [SP, -16]!
+            bl readCSV
+            ldp x29, x30, [SP], 16
+
+            ret
+
+
 itoa2:
     
     mov x10, 0      // contador de digitos a imprimir

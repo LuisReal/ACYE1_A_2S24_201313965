@@ -77,7 +77,9 @@
         .asciz "El Archivo Se Ha Leido Correctamente\n"
         lenMsgSuccess = .- msgSuccess
 
-    
+    dospuntos:
+        .asciz ":"
+        lenDospuntos = .- dospuntos    
 
 .bss
 
@@ -119,6 +121,18 @@
 
     filename:
         .space 100
+
+    buffer:
+        .zero 1024
+
+    fileDescriptor:
+        .space 8
+
+    listIndex:
+        .zero 6
+
+    character:
+        .space 2
 
 .text
 
