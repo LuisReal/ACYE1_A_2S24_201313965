@@ -558,6 +558,10 @@ _start:
         beq concluir_guardar
         cmp w2, 2
         beq concluir_suma
+        cmp w2, 3
+        beq concluir_resta
+        cmp w2, 4
+        beq concluir_multiplicacion
         cmp w2, 11
         beq concluir_llenar
         cmp w2, 15
@@ -593,10 +597,33 @@ _start:
         ldr x10, =v_retorno
         str x9, [x10]               //almacena el resultado en v_retorno
 
-        /* 
-        adrp x25, tablero
-        add  x25, x25, :lo12:tablero       // Sumar el offset para la dirección completa
-        str  x9, [x25, x5, lsl 3]*/
+        B exit_programa
+
+    concluir_resta:
+
+        ldr x8, =param1             //contiene el primer valor entero
+        ldr x9, [x8]
+        ldr x11, =param2            //contiene el segundo valor entero
+        ldr x10, [x11]
+
+        sub x9, x9, x10
+
+        ldr x10, =v_retorno
+        str x9, [x10]               //almacena el resultado en v_retorno
+
+        B exit_programa
+
+    concluir_multiplicacion:
+
+        ldr x8, =param1             //contiene el primer valor entero
+        ldr x9, [x8]
+        ldr x11, =param2            //contiene el segundo valor entero
+        ldr x10, [x11]
+
+        mul x9, x9, x10
+
+        ldr x10, =v_retorno
+        str x9, [x10]               //almacena el resultado en v_retorno
 
         B exit_programa
 
