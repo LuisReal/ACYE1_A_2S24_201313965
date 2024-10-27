@@ -5,6 +5,9 @@ verifyCommand:
     
     cmp w20, #'G'               // Compara el carácter con 'G'
     beq guardar                 // Si es igual, salta a guardar
+
+    cmp w20, #'S'               // Compara el carácter con 'S'
+    beq suma                 // Si es igual, salta a suma
     
     cmp w20, #'L'
     beq llenar                  // Si es igual, salta a llenar
@@ -45,6 +48,27 @@ verifyCommand:
 
         mov w4, 1               // (Comando Guardar encontrado)
         B end_verify     // Si no encuentra ningun comando marcar error
+    
+    suma:
+        ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
+        cmp w20, #'U'           
+        bne end_verify          // Si no es igual, salta a end_verificar
+
+        ldrb w20, [x0], 1
+        cmp w20, #'M'           
+        bne end_verify          // Si no es igual, salta a end_verificar
+
+        ldrb w20, [x0], 1
+        cmp w20, #'A'           
+        bne end_verify          // Si no es igual, salta a end_verificar
+
+        ldrb w20, [x0], 1
+        cmp w20, #' '           
+        bne end_verify          // Si no es igual, salta a end_verificar
+
+        mov w4, 2               // (Comando Guardar encontrado)
+        B end_verify     // Si no encuentra ningun comando marcar error
+
 
     llenar:
         ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)

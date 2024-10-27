@@ -138,6 +138,9 @@
     character:
         .space 2
 
+    v_retorno:
+        .space 8
+
 .text
 
 printCeldas:
@@ -321,6 +324,9 @@ verifyParam:
         cmp w20, 10                 
         beq retornar_numero         // Si es igual, salta a retornar_numero
 
+        cmp w20, #'*'
+        beq retornar_var_retorno    // si es igual, salta a retornar_var_retorno
+
         // valida que sean solo numeros
         strb w20, [x10], 1
         add x4, x4, 1               // Numero de caracteres leidos se aumenta
@@ -353,6 +359,10 @@ verifyParam:
     retonar_celda: //A01, A02
         mov w4, 2
         b v_fin
+
+    retornar_var_retorno:
+        mov w4, 3
+        b v_fin
     
     retonar_archivo:
         mov w4, 4
@@ -384,6 +394,8 @@ paramNumero:
     beq param_numero
     cmp w4, 02  // Si el parametro es una celda
     beq param_celda
+    cmp w4, 03  // Si el parametro es una asterisco(variable de retorno)
+    beq param_retorno
     cmp w4, 04  // Si el parametro es un archivo
     beq param_texto
     b retornar_param
@@ -393,7 +405,7 @@ paramNumero:
         ldr x12, =num
         ldr x5, =num
         stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
-        bl atoi
+        bl atoi                      // [x8]=param1 o param2 contendra el numero entero
         ldp x29, x30, [SP], 16       // Restaurar x29 y x30 después de la llamada
         b retornar_param
 
@@ -415,8 +427,13 @@ paramNumero:
     param_texto:
         ldr x12, =num
         ldr x13, [x12]
-        str x13, [x8]
+        str x13, [x8]                   //x8 = param1 o param2
         b retornar_param
+
+    param_retorno:
+        ldr x12, =v_retorno             
+        ldr x13, [x12]                  //x13 contiene un numero entero
+        str x13, [x8]                   //guarda el valor de v_retorno en param1
 
     retornar_param:
         ret
@@ -516,10 +533,10 @@ _start:
         
         bl cleanParam                       // limpia la variable num que que contiene los valores del parametro
         
-        bl verifyParam                      // verifica el tipo de parametro (Numero, Celda o retorno) y guarda el parametro
-        ldr x8, =param1
+        bl verifyParam                      // verifica el tipo de parametro (w4 Numero=1, Celda=2 o retorno=3)
+        ldr x8, =param1                     //contendra el valor ingresado
         ldr x9, =posicion_param1
-        bl paramNumero
+        bl paramNumero                      //aqui es donde se guardan el parametro en x8 y calcula posicion del parametro
 
         bl verificarPalabraIntermedia
         bl cleanParam
@@ -528,13 +545,15 @@ _start:
         bl verifyParam
         ldr x8, =param2
         ldr x9, =posicion_param2
-        bl paramNumero
+        bl paramNumero                      //aqui es donde se guardan el parametro en x8 y calcula posicion del parametro
 
         adr x0, tipo_comando
         ldrb w2, [x0]
 
         cmp w2, 1
         beq concluir_guardar
+        cmp w2, 2
+        beq concluir_suma
         cmp w2, 11
         beq concluir_llenar
         cmp w2, 15
@@ -554,7 +573,26 @@ _start:
 
         adrp x25, tablero
         add  x25, x25, :lo12:tablero       // Sumar el offset para la dirección completa
-        str  x9, [x25, x5, lsl 3]
+        str  x9, [x25, x5, lsl 3]           //x5 = posicion_param1  o posicion_param2 se calcula en paramNumero->posicionCelda (fer)
+
+        B exit_programa
+
+    concluir_suma:
+
+        ldr x8, =param1             //contiene el primer valor entero
+        ldr x9, [x8]
+        ldr x11, =param2            //contiene el segundo valor entero
+        ldr x10, [x11]
+
+        add x9, x9, x10
+
+        ldr x10, =v_retorno
+        str x9, [x10]               //almacena el resultado en v_retorno
+
+        /* 
+        adrp x25, tablero
+        add  x25, x25, :lo12:tablero       // Sumar el offset para la dirección completa
+        str  x9, [x25, x5, lsl 3]*/
 
         B exit_programa
 

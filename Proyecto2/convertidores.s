@@ -97,7 +97,7 @@ atoi:
         neg x7, x7
 
     endConvertir:
-        str x7, [x8]            // 32 bits
+        str x7, [x8]            // x8 = contendra el valor entero
     
     ret
 
