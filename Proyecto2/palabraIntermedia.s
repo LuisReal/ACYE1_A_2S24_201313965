@@ -7,11 +7,12 @@ verificarPalabraIntermedia:
     cmp w20, #'H'          // Compara el carácter con 'H'
     beq palabra_hasta      
     cmp w20, #'S'          // Compara el carácter con 'S'
-    beq separado_por       
+    beq separado_por      
+    cmp w20, #'Y'          // Compara el carácter con 'Y'
+    beq letra_Y  
     
     b end_verify_intermedia
 
-    
     palabra_en:
     
         ldrb w20, [x0], #1
@@ -103,21 +104,21 @@ verificarPalabraIntermedia:
         bne end_verify_intermedia       
 
         ldrb w20, [x0], #1
-        cmp w20, #'C'            
+        cmp w20, #'T'            
         bne end_verify_intermedia 
-
-        ldrb w20, [x0], #1
-        cmp w20, #'O'            
-        bne end_verify_intermedia
-
-        ldrb w20, [x0], #1
-        cmp w20, #'M'            
-        bne end_verify_intermedia
 
         ldrb w20, [x0], #1
         cmp w20, #'A'            
         bne end_verify_intermedia
-        /* 
+
+        ldrb w20, [x0], #1
+        cmp w20, #'B'            
+        bne end_verify_intermedia
+
+        ldrb w20, [x0], #1
+        cmp w20, #'U'            
+        bne end_verify_intermedia
+        
         ldrb w20, [x0], #1
         cmp w20, #'L'            
         bne end_verify_intermedia
@@ -136,9 +137,17 @@ verificarPalabraIntermedia:
 
         ldrb w20, [x0], #1
         cmp w20, #'R'            
-        bne end_verify_intermedia*/
+        bne end_verify_intermedia
 
         mov w4, 3               // w4=3 palabra intermedia SEPARADO POR encontrada
+        b end_verify_intermedia
+
+    letra_Y:
+        ldrb w20, [x0], #1
+        cmp w20, #' '        
+        bne end_verify_intermedia    
+
+        mov w4, 4           // w4=4 palabra intermedia Y encontrada
         b end_verify_intermedia
 
     end_verify_intermedia:

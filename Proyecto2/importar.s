@@ -7,7 +7,7 @@ p_import:  //proc_import
         ldrb w2, [x0], 1
         ldrb w3, [x1], 1
 
-        cbz w2, imp_filename
+        cbz w2, imp_filename        //cuando llega al final (0)
 
         cmp w2, w3
         bne imp_err
@@ -33,7 +33,7 @@ p_import:  //proc_import
 
         cont_file:
             strb wzr, [x0]
-            ldr x0, =sep
+            ldr x0, =sep        //"SEPARADO POR COMA"
 
             cont_loop:
                 ldrb w2, [x0], 1
@@ -55,54 +55,57 @@ imp_data:
     bl openFile
     ldp x29, x30, [SP], 16
 
-    ldr x25, =buffer
+    ldr x25, =buffer    //aqui se guardan los encabezados carnet tarea1 etc
     mov x10, 0
     ldr x11, =fileDescriptor
     ldr x11, [x11]
     mov x17, 0 //contador de columnas
     ldr x15, =listIndex
 
-    read_encabezado:
+    read_encabezado://carnet	tarea1	tarea2	parcial1	tarea3(13=retorno de carro, 10=salto de linea)
         read x11, character, 1
         ldr x4, =character
-        ldrB w2, [x4]
+        ldrb w2, [x4]
 
-        cmp w2, 44
+        cmp w2, 9           //datos separados por tabulador
         beq getIndex
 
         cmp w2, 10
         beq getIndex
 
-        strb w2, [x25], 1
-        add x10, x10, 1
+        cmp w2, 13          //si w2 es igual a 13=retorno de carro, no lo agrega a buffer y continua al siguiente
+        beq read_encabezado // la ultima columna del archivo csv trae un retorno de carro y hay que quitarlo
+
+        strb w2, [x25], 1  // x25 = buffer que contiene carnet o tarea1 o tarea2 etc
+        add x10, x10, 1     //cuenta el numero de caracteres de carnet o tarea1
         B read_encabezado
 
         getIndex:
-            print getIndexMsg, lenGetIndexMsg
+            print getIndexMsg, lenGetIndexMsg   //"Ingrese la columna para el encabezado "
             print buffer, x10
             print dospuntos, lenDospuntos
             print espacio, lenEspacio
 
-            ldr x4, =character
-            ldrB w7, [x4]
+            ldr x4, =character      //contiene el tabulador 9 o salto de linea 10
+            ldrb w7, [x4]
 
-            read 0, character, 2
+            read 0, character, 2    //ingresar columna por consola y lo guarda en caracter
 
             ldr x4, =character
-            ldrB w2, [x4]
-            sub w2, w2, 65
+            ldrb w2, [x4]
+            sub w2, w2, 65          //compara con columna (A-K)
             
-            strb w2, [x15], 1
-            add x17, x17, 1
+            strb w2, [x15], 1       //x15 = listIndex
+            add x17, x17, 1         //contador de columnas
 
             cmp w7, 10
             beq end_header
 
-            ldr x25, =buffer
+            ldr x25, =buffer  
             mov x10, 0
             B read_encabezado
 
-        end_header:
+        end_header: //cuando termina de leer el encabezado: carnet tarea1 tarea2 etc salta a readCSV
             stp x29, x30, [SP, -16]!
             bl readCSV
             ldp x29, x30, [SP], 16
@@ -110,39 +113,56 @@ imp_data:
             ret
 
 readCSV:
-    ldr x10, =value
+    ldr x10, =value             //"0000000000000"
     ldr x11,  =fileDescriptor
     ldr x11, [x11]
     mov x21, 0  // contador de filas
-    ldr x15, =listIndex // contador de columnas
+    ldr x15, =listIndex // (posicion de cada valor dentro de la celda no de la tabla) (fer)
 
     rd_num:
-        read x11, character, 1
+        read x11, character, 1      //200764749	23	88	99	50	43
         ldr x4, =character
-        ldrB w3, [x4]
-        cmp w3, 44
-        BEQ rd_cv_num
+        ldrb w3, [x4]
+        cmp w3, 9           //datos separados por tabulador
+        beq rd_cv_num
 
         cmp w3, 10
-        BEQ rd_cv_num
+        beq rd_cv_num
 
-        mov x25, x0
-        CBZ x0, rd_cv_num
+        cmp w3, 13          // la ultima columna del archivo csv trae un retorno de carro y hay que quitarlo
+        beq rd_num          // si w3 = 13 retorno de carro, no lo agrega a value y salta al siguiente caracter
 
-        STRB w3, [x10], 1   //x10 = value
+        mov x25, x0         //x0 = "SEPARADO POR COMA"
+        cbz x0, rd_cv_num
+
+        strb w3, [x10], 1   //x10 = value //200764749	23	88	99	50	43
         B rd_num
 
-    rd_cv_num:
-        ldr x5, =value
+    rd_cv_num:  //value = 200764749	23	88	99	50	43
+        ldr x5, =value          //"0000000000000" tiene agregado un caracter nulo 0 al final son 14 bytes(el tamaño de value) y no 13
         ldr x8, =value
 
         stp x29, x30, [SP, -16]!
 
-        bl atoi2
+        bl atoi2                //aqui se usa x5 y x8
 
         ldp x29, x30, [SP], 16
 
-        ldrB w16, [x15], 1 // obtener la columna
+        ldrb w16, [x15], 1         // obtener (posicion de cada valor dentro de la celda no de la tabla) (fer)
+
+        /*
+            aarch64-linux-gnu-as -mcpu=cortex-a57 main.s -o main.o
+            aarch64-linux-gnu-ld main.o -o main
+            qemu-aarch64 -g 1234 ./main
+
+            gdb-multiarch -q --nh \
+            -ex 'set architecture aarch64' \
+            -ex 'file main' \
+            -ex 'target remote localhost:1234' \
+            -ex 'layout split' \
+            -ex 'layout regs' 
+
+            */
         
         adrp x20, tablero
         add  x20, x20, :lo12:tablero       // Sumar el offset para la dirección completa
@@ -277,38 +297,85 @@ itoa2:
 
 atoi2:
     
-    sub x5, x5, 1
-    a_c_digits:
-        ldrb w7, [x8], 1
-        cbz w7, a_c_convert
+    sub x5, x5, 1    //x5 = direccion memoria de value (fer)
+    a_c_digits://200764749
+        ldrb w7, [x8], 1   //x8 = tambien es la direccion memoria de value (fer)
+        
+        cbz w7, a_c_convert //al final de x8(value) hay un caracter nulo 0
+
         cmp w7, 10
         beq a_c_convert
+
         B a_c_digits
 
-    a_c_convert:
+    a_c_convert: //20076474 9
         sub x8, x8, 2
         mov x4, 1
         mov x9, 0
 
         a_c_loop:
-            ldrb w7, [x8], -1
-            cmp w7, 45
+            ldrb w7, [x8], -1   //20076474 9  despues de cargar el 9 retrocede 1 hacia 4
+            
+            cmp w7, 45          //si hay un signo menos
             beq a_c_negative
 
-            sub w7, w7, 48
-            mul w7, w7, w4
-            add w9, w9, w7
+            sub x7, x7, 48      
+            mul x7, x7, x4      
+            add x9, x9, x7      
 
-            mov w6, 10
-            mul w4, w4, w6
+            mov x6, 10
+            mul x4, x4, x6      
 
             cmp x8, x5
             bne a_c_loop
             B a_c_end
 
         a_c_negative:
-            neg w9, w9
+            neg x9, x9
 
         a_c_end:
             ret
+/* 
 
+atoi:  
+
+    sub x5, x5, 1
+    contarDigitos:
+        ldrb w1, [x12], 1      //x12 = num parametro 
+        cbz w1, convertir
+        cmp w1, 32              //32 = espacio  
+        beq convertir
+        cmp w1, 10
+        beq convertir
+
+        b contarDigitos
+
+    convertir:
+        sub x12, x12, 2         
+        mov x4, 1               // Multiplicador
+        mov x7, 0               // Resultado
+        
+    convertirChars:
+        ldrb w1, [x12], -1
+        cmp w1, 45
+        beq negativeNum
+
+        sub x1, x1, 48      //x1 = num
+        mul x1, x1, x4
+        add x7, x7, x1
+
+        mov x6, 10
+        mul x4, x4, x6
+        
+        cmp x12, x5
+        bne convertirChars
+        b endConvertir
+
+    negativeNum:
+        neg x7, x7
+
+    endConvertir:
+        str x7, [x8]            // 32 bits
+    
+    ret
+*/

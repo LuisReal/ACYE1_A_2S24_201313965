@@ -133,7 +133,7 @@
         .space 8
 
     listIndex:
-        .zero 6
+        .zero 13
 
     character:
         .space 2
