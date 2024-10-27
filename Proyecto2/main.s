@@ -240,7 +240,7 @@ cleanParam:
 posicionCelda:
     // row-major
     
-    ldr x12, =num           // Se carga la direccion de memoria del parametro de la celda
+    ldr x12, =num           // Se carga la direccion de memoria del parametro de la celda(num fue modificado en verifyParam num=param1 o param2)
     ldrb w5, [x12], 1       // Se carga el primer valor que se espera sea la letra de (A01,A02) (fer)
     sub w20, w5, 65         // Se resta 65 ya que se espera que sea una letra entre A-K (A01,A02,A03, etc) (fer)
     /* secuencia de las letras 
@@ -253,12 +253,13 @@ posicionCelda:
     // Columna x20, fila x19
     stp x29, x30, [SP, -16]!
     ldr x8, =fila64         // x8 contendra el numero de fila que se guarda con atoi (fer)
-    bl atoi                 // aqui se usa x5=direccion memoria de num (fer)
+    bl atoi                 // aqui se usa x5=direccion memoria de num y x8 contendra el numero entero(fer)
     ldp x29, x30, [SP], 16
 
     sub x7, x7, 1           // De la funcion Atoi, se tiene que x7 tiene el resultado del numero convertido(A01,A02), se le resta 1
     mov x19, x7             //x19 = el numero entero
 
+    //aqui se configura la posicion de param1 o param2
     // row-Major x5 = posicion_param1  o posicion_param2 (fer)
     mov x5, 11              // 11 es el numero de columnas
     mul x5, x5, x19         // x5 = x5 * x19 (x19 = el numero entero de A01, A02)
@@ -269,7 +270,7 @@ verifyParam:
     // retorna en w4, el tipo de parametro
     //w4=1=numero        w4=2=celda
 
-    ldr x10, =num                   // Direccion en memoria donde se almacena el parametro
+    ldr x10, =num                   // Direccion en memoria donde se almacenara el parametro por primera vez
     mov x4, 0                       // x4=tipo de parametro puede ser: Numero, Celda, retorno
                                 
 
@@ -318,14 +319,15 @@ verifyParam:
     analizar_numero:
 
         ldrb w20, [x0], 1
+
+        cmp w20, #'*'
+        beq retornar_var_retorno    // si es igual, salta a retornar_var_retorno
+
         cmp w20, #' '              
         beq retornar_numero         // Si es igual, salta a retornar_numero
         
         cmp w20, 10                 
         beq retornar_numero         // Si es igual, salta a retornar_numero
-
-        cmp w20, #'*'
-        beq retornar_var_retorno    // si es igual, salta a retornar_var_retorno
 
         // valida que sean solo numeros
         strb w20, [x10], 1
@@ -361,6 +363,7 @@ verifyParam:
         b v_fin
 
     retornar_var_retorno:
+        add x0, x0, 1       //aumenta la direccion de memoria en 1 para que este en la palabra intermedia
         mov w4, 3
         b v_fin
     
@@ -390,13 +393,13 @@ getNumber:
 
 paramNumero:
     
-    cmp w4, 01  // Si el parametro es un numero
+    cmp w4, 1  // Si el parametro es un numero
     beq param_numero
-    cmp w4, 02  // Si el parametro es una celda
+    cmp w4, 2  // Si el parametro es una celda
     beq param_celda
-    cmp w4, 03  // Si el parametro es una asterisco(variable de retorno)
+    cmp w4, 3  // Si el parametro es una asterisco(variable de retorno)
     beq param_retorno
-    cmp w4, 04  // Si el parametro es un archivo
+    cmp w4, 4  // Si el parametro es un archivo
     beq param_texto
     b retornar_param
 
@@ -413,10 +416,10 @@ paramNumero:
         //x8 = param1 o  param2 (fer)
         str x8, [sp, #-16]!         // Decrementa el puntero de la pila y guarda x8 en la pila para no perder el valor de x8 (fer)
         stp x29, x30, [SP, -16]!    // Guardar x29 y x30 antes de la llamada
-        bl posicionCelda            //A01 = A columna 01 fila 
+        bl posicionCelda            // aqui se calcula la posicion de param1 o param2 y se guarda en x5 A01 = A columna 01 fila 
         ldp x29, x30, [SP], 16
         ldr x8, [sp], #16           // Carga x8(param1 o param2) desde la pila y luego incrementa el puntero de la pila (fer)
-        str x5, [x9]                //x9 = posicion_param1  o posicion_param2 (fer)
+        str x5, [x9]                // x9 = posicion_param1  o posicion_param2 (fer)
 
         adrp x25, tablero
         add  x25, x25, :lo12:tablero    // Sumar el offset para la dirección completa
@@ -434,6 +437,7 @@ paramNumero:
         ldr x12, =v_retorno             
         ldr x13, [x12]                  //x13 contiene un numero entero
         str x13, [x8]                   //guarda el valor de v_retorno en param1
+        b retornar_param
 
     retornar_param:
         ret
