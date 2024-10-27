@@ -63,9 +63,9 @@ atoi:
 
     sub x5, x5, 1
     contarDigitos:
-        ldrb w1, [x12], 1       
+        ldrb w1, [x12], 1      //x12 = num parametro 
         cbz w1, convertir
-        cmp w1, 32
+        cmp w1, 32              //32 = espacio  
         beq convertir
         cmp w1, 10
         beq convertir
@@ -82,7 +82,7 @@ atoi:
         cmp w1, 45
         beq negativeNum
 
-        sub x1, x1, 48
+        sub x1, x1, 48      //x1 = num
         mul x1, x1, x4
         add x7, x7, x1
 

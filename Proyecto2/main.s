@@ -50,8 +50,9 @@
     
     letra:  
         .asciz "A"
+    /* 
     buffer:  
-        .asciz "0\n"
+        .asciz "0\n"*/
     prueba:  
         .asciz "9223372036854775807\0"
     
@@ -118,6 +119,9 @@
 
     num:
         .space 19   // guarda los parametros que ingrese el usuario (Numero, Celda o retorno)
+
+    num2:
+        .space 8
 
     filename:
         .space 100
@@ -234,28 +238,28 @@ posicionCelda:
     // row-major
     
     ldr x12, =num           // Se carga la direccion de memoria del parametro de la celda
-    ldrb w5, [x12], 1       // Se carga el primer valor que se espera sea la letra
-    sub w20, w5, 65         // Se resta 65 ya que se espera que sea una letra entre A-K
+    ldrb w5, [x12], 1       // Se carga el primer valor que se espera sea la letra de (A01,A02) (fer)
+    sub w20, w5, 65         // Se resta 65 ya que se espera que sea una letra entre A-K (A01,A02,A03, etc) (fer)
     /* secuencia de las letras 
     A=0
     b=1
     C=2
     */
-    mov x5, x12             // Se carga el valor de la fila a x5
+    mov x5, x12             // Se carga solamente la direccion de memoria de x12=num (fer)
 
     // Columna x20, fila x19
     stp x29, x30, [SP, -16]!
-    ldr x8, =fila64         // Este parametro se envia unicamente porque lo pide la funcion sin embargo no se usara
-    bl atoi 
+    ldr x8, =fila64         // x8 contendra el numero de fila que se guarda con atoi (fer)
+    bl atoi                 // aqui se usa x5=direccion memoria de num (fer)
     ldp x29, x30, [SP], 16
 
-    sub x7, x7, 1           // De la funcion Atoi, se tiene que x7 tiene el resultado del numero convertido, se le resta 1
-    mov x19, x7             // Fila=x19
+    sub x7, x7, 1           // De la funcion Atoi, se tiene que x7 tiene el resultado del numero convertido(A01,A02), se le resta 1
+    mov x19, x7             //x19 = el numero entero
 
-    // row-Major
+    // row-Major x5 = posicion_param1  o posicion_param2 (fer)
     mov x5, 11              // 11 es el numero de columnas
-    mul x5, x5, x19         // x5 = x5 * x19 (el resultado se almacena en x5)
-    add x5, x5, x20         // x5=posicion exit en nuestra matriz
+    mul x5, x5, x19         // x5 = x5 * x19 (x19 = el numero entero de A01, A02)
+    add x5, x5, x20         // w20= a la posicion (el indice 0000000000000, 13 valores caben en una celda)
     ret
 
 verifyParam:
@@ -279,9 +283,10 @@ verifyParam:
         cmp w20, #'K'               
         bgt analizar_archivo_resta  // Si w20 > 'K', salta fuera del rango (da error)
         
+
         strb w20, [x10], 1          // Guardar la columna de la celda en num
     
-    celda_row:
+    celda_row:// si w20 = A - K
         ldrb w20, [x0], 1           
         add x4, x4, 1              
 
@@ -298,7 +303,8 @@ verifyParam:
         cmp w20, #'9'               
         bgt analizar_archivo_resta  // Si w20 > '9', salta fuera del rango deberia de dar error
         
-        strb w20, [x10], 1          // Guardar la fila de la celda en num
+        // si w20 = 0-9 (numero de fila)
+        strb w20, [x10], 1          // Guardar la fila de la celda en num (num = A01,A02, etc)
         b celda_row                 // Sigue leyendo los numeros de la fila
 
     analizar_numero_resta:
@@ -344,7 +350,7 @@ verifyParam:
         mov w4, 1
         b v_fin
 
-    retonar_celda:
+    retonar_celda: //A01, A02
         mov w4, 2
         b v_fin
     
@@ -382,8 +388,8 @@ paramNumero:
     beq param_texto
     b retornar_param
 
-    param_numero:
-        // El numero de celda estara en w4
+    param_numero: // solo numeros
+        
         ldr x12, =num
         ldr x5, =num
         stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
@@ -391,18 +397,19 @@ paramNumero:
         ldp x29, x30, [SP], 16       // Restaurar x29 y x30 después de la llamada
         b retornar_param
 
-    param_celda:
-        str x8, [sp, #-16]!  // Decrementa el puntero de la pila y guarda x8 en la pila
-        stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
-        bl posicionCelda
+    param_celda:    //A01, A02 etc
+        //x8 = param1 o  param2 (fer)
+        str x8, [sp, #-16]!         // Decrementa el puntero de la pila y guarda x8 en la pila para no perder el valor de x8 (fer)
+        stp x29, x30, [SP, -16]!    // Guardar x29 y x30 antes de la llamada
+        bl posicionCelda            //A01 = A columna 01 fila 
         ldp x29, x30, [SP], 16
-        ldr x8, [sp], #16   // Carga x8 desde la pila y luego incrementa el puntero de la pila
-        str x5, [x9]
+        ldr x8, [sp], #16           // Carga x8(param1 o param2) desde la pila y luego incrementa el puntero de la pila (fer)
+        str x5, [x9]                //x9 = posicion_param1  o posicion_param2 (fer)
 
         adrp x25, tablero
-        add  x25, x25, :lo12:tablero       // Sumar el offset para la dirección completa
-        ldr  x2, [x25, x5, lsl 3]  // Se carga el valor que tenga nuestra matriz en dicha posicion, en el registro x0
-        str x2, [x8]
+        add  x25, x25, :lo12:tablero    // Sumar el offset para la dirección completa
+        ldr  x2, [x25, x5, lsl 3]       // Se carga el valor que tenga nuestra matriz en dicha posicion, en el registro x2
+        str x2, [x8]                    //x8 = param1 o  param2
         b retornar_param
 
     param_texto:
@@ -470,15 +477,15 @@ llenarFilaColumna:
         stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
         bl getNumber
         ldp x29, x30, [SP], 16       // Restaurar x29 y x30 después de la llamada
-        ldr x12, =any_number 
-        ldr x5, =any_number 
+        ldr x12, =any_number         //obtiene el valor ingresado por consola
+        ldr x5, =any_number          //obtiene el valor ingresado por consola   
         ldr x8, =fila64
         stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
         bl atoi
         ldp x29, x30, [SP], 16       // Restaurar x29 y x30 después de la llamada
 
-        // mov x9, 122
-        str  x7, [x25, x20, lsl 3]
+        // x20 = w20 = posicion_param1
+        str  x7, [x25, x20, lsl 3]   //x7(numero entero) proviene de atoi y lo guarda en el tablero
 
         adr x4, posicion_param1
         ldr w20, [x4]

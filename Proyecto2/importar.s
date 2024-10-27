@@ -62,7 +62,7 @@ imp_data:
     mov x17, 0 //contador de columnas
     ldr x15, =listIndex
 
-    read_head:
+    read_encabezado:
         read x11, character, 1
         ldr x4, =character
         ldrB w2, [x4]
@@ -75,7 +75,7 @@ imp_data:
 
         strb w2, [x25], 1
         add x10, x10, 1
-        B read_head
+        B read_encabezado
 
         getIndex:
             print getIndexMsg, lenGetIndexMsg
@@ -100,7 +100,7 @@ imp_data:
 
             ldr x25, =buffer
             mov x10, 0
-            B read_head
+            B read_encabezado
 
         end_header:
             stp x29, x30, [SP, -16]!
@@ -109,6 +109,102 @@ imp_data:
 
             ret
 
+readCSV:
+    ldr x10, =value
+    ldr x11,  =fileDescriptor
+    ldr x11, [x11]
+    mov x21, 0  // contador de filas
+    ldr x15, =listIndex // contador de columnas
+
+    rd_num:
+        read x11, character, 1
+        ldr x4, =character
+        ldrB w3, [x4]
+        cmp w3, 44
+        BEQ rd_cv_num
+
+        cmp w3, 10
+        BEQ rd_cv_num
+
+        mov x25, x0
+        CBZ x0, rd_cv_num
+
+        STRB w3, [x10], 1   //x10 = value
+        B rd_num
+
+    rd_cv_num:
+        ldr x5, =value
+        ldr x8, =value
+
+        stp x29, x30, [SP, -16]!
+
+        bl atoi2
+
+        ldp x29, x30, [SP], 16
+
+        ldrB w16, [x15], 1 // obtener la columna
+        
+        adrp x20, tablero
+        add  x20, x20, :lo12:tablero       // Sumar el offset para la dirección completa
+        
+        //ldr x20, =tablero
+        mov x22, 11             //11 columnas de (A-K) (fer)
+        mul x22, x21, x22       //x21 = 0 = contador filas
+        add x22, x16, x22       //X16 =listIndex 
+        str x9, [x20, x22, LSL 3]
+
+        ldr x12, =value
+        mov w13, 0
+        mov x14, 0
+        
+        ldr x20, =listIndex
+        sub x20, x15, x20
+        cmp x20, x17
+        bne cls_num
+        
+        ldr x15, =listIndex
+        add x21, x21, 1
+
+        cls_num:
+            strb w13, [x12], 1
+            add x14, x14, 1
+            cmp x14, 7
+            bne cls_num
+            ldr x10, =value
+            cbnz x25, rd_num
+
+    rd_end:
+        print salto, lenSalto
+        print msgSuccess, lenMsgSuccess
+        read 0, character, 2
+        RET
+
+openFile:
+    // param: x1 => filename
+    mov x0, -100
+    mov x2, 0
+    mov x8, 56
+    svc 0
+
+    cmp x0, 0
+    ble op_f_error
+    ldr x9, =fileDescriptor
+    str x0, [x9]
+    B op_f_end
+
+    op_f_error:
+        print errorOpenFile, lenErrOpenFile
+        read 0, character, 2
+    
+    op_f_end:
+        ret
+
+closeFile:
+    ldr x0, =fileDescriptor
+    ldr x0, [x0]
+    mov x8, 57
+    svc 0
+    ret
 
 itoa2:
     
@@ -176,5 +272,43 @@ itoa2:
 
     i_endConversion:
         add x10, x10, x12
-        print num, x10
+        print value, x10
         ret
+
+atoi2:
+    
+    sub x5, x5, 1
+    a_c_digits:
+        ldrb w7, [x8], 1
+        cbz w7, a_c_convert
+        cmp w7, 10
+        beq a_c_convert
+        B a_c_digits
+
+    a_c_convert:
+        sub x8, x8, 2
+        mov x4, 1
+        mov x9, 0
+
+        a_c_loop:
+            ldrb w7, [x8], -1
+            cmp w7, 45
+            beq a_c_negative
+
+            sub w7, w7, 48
+            mul w7, w7, w4
+            add w9, w9, w7
+
+            mov w6, 10
+            mul w4, w4, w6
+
+            cmp x8, x5
+            bne a_c_loop
+            B a_c_end
+
+        a_c_negative:
+            neg w9, w9
+
+        a_c_end:
+            ret
+

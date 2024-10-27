@@ -103,21 +103,21 @@ verificarPalabraIntermedia:
         bne end_verify_intermedia       
 
         ldrb w20, [x0], #1
-        cmp w20, #'T'            
+        cmp w20, #'C'            
         bne end_verify_intermedia 
+
+        ldrb w20, [x0], #1
+        cmp w20, #'O'            
+        bne end_verify_intermedia
+
+        ldrb w20, [x0], #1
+        cmp w20, #'M'            
+        bne end_verify_intermedia
 
         ldrb w20, [x0], #1
         cmp w20, #'A'            
         bne end_verify_intermedia
-
-        ldrb w20, [x0], #1
-        cmp w20, #'B'            
-        bne end_verify_intermedia
-
-        ldrb w20, [x0], #1
-        cmp w20, #'U'            
-        bne end_verify_intermedia
-
+        /* 
         ldrb w20, [x0], #1
         cmp w20, #'L'            
         bne end_verify_intermedia
@@ -136,7 +136,7 @@ verificarPalabraIntermedia:
 
         ldrb w20, [x0], #1
         cmp w20, #'R'            
-        bne end_verify_intermedia
+        bne end_verify_intermedia*/
 
         mov w4, 3               // w4=3 palabra intermedia SEPARADO POR encontrada
         b end_verify_intermedia
