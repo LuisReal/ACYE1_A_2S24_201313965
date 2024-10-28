@@ -80,7 +80,11 @@
 
     dospuntos:
         .asciz ":"
-        lenDospuntos = .- dospuntos    
+        lenDospuntos = .- dospuntos   
+
+    errormsg:
+        .asciz "ERROR: No se puede dividir entre 0\n"
+        lenErrormsg = . - errormsg 
 
 .bss
 
@@ -562,6 +566,10 @@ _start:
         beq concluir_resta
         cmp w2, 4
         beq concluir_multiplicacion
+        cmp w2, 5
+        beq concluir_division
+        cmp w2, 6
+        beq concluir_potenciar
         cmp w2, 11
         beq concluir_llenar
         cmp w2, 15
@@ -624,6 +632,49 @@ _start:
 
         ldr x10, =v_retorno
         str x9, [x10]               //almacena el resultado en v_retorno
+
+        B exit_programa
+
+    concluir_division:
+
+        ldr x8, =param1             //contiene el primer valor entero
+        ldr x9, [x8]
+        ldr x11, =param2            //contiene el segundo valor entero
+        ldr x10, [x11]
+
+        udiv x9, x9, x10
+        cmp x9, 0
+        beq error
+
+        ldr x10, =v_retorno
+        str x9, [x10]               //almacena el resultado en v_retorno
+
+        B exit_programa
+
+    error:
+        print errormsg, lenErrormsg     //muestra mensaje de error de la division entre 0
+        input                           // ayuda a mostrar el mensaje de error(de lo contrario no lo muestra y se salta)    
+        B insert_command
+
+    concluir_potenciar:
+
+        ldr x8, =param1             //contiene el primer valor entero
+        ldr x9, [x8]
+        ldr x11, =param2            //contiene el segundo valor entero
+        ldr x10, [x11]
+
+        mov x2, 1
+
+        pot_loop:
+
+            mul x2, x2, x9       // x2 = resultado 2, 4, 8
+            sub x10, x10, 1      // exponente, 3 = 2, 1 
+
+            cmp x10, 0
+            bne pot_loop         // Repetir el bucle
+
+        ldr x10, =v_retorno
+        str x2, [x10]               //almacena el resultado en v_retorno
 
         B exit_programa
 
@@ -695,7 +746,7 @@ _start:
 
         bl imp_data
 
-        b exit
+        b exit_programa
 
     exit_programa:
         b insert_command

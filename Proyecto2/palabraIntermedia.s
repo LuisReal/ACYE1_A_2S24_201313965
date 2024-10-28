@@ -10,6 +10,9 @@ verificarPalabraIntermedia:
     beq separado_por      
     cmp w20, #'Y'          // Compara el carácter con 'Y'
     beq letra_Y  
+
+    cmp w20, #'A'          // Compara el carácter con 'A' para el comando POTENCIAR A LA
+    beq A_LA
     
     b end_verify_intermedia
 
@@ -148,6 +151,27 @@ verificarPalabraIntermedia:
         bne end_verify_intermedia    
 
         mov w4, 4           // w4=4 palabra intermedia Y encontrada
+        b end_verify_intermedia
+
+    A_LA:
+
+        ldrb w20, [x0], #1
+        cmp w20, #' '          
+        bne end_verify_intermedia            
+
+        ldrb w20, [x0], #1
+        cmp w20, #'L'          
+        bne end_verify_intermedia            
+
+        ldrb w20, [x0], #1
+        cmp w20, #'A'          
+        bne end_verify_intermedia                      
+
+        ldrb w20, [x0], #1
+        cmp w20, #' '          
+        bne end_verify_intermedia            
+
+        mov w4, 5                   // w4=2 palabra intermedia HASTA encontrada
         b end_verify_intermedia
 
     end_verify_intermedia:
