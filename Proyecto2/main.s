@@ -241,6 +241,21 @@ cleanParam:
     str w5, [x1]               
     ret
 
+cleanCommand:
+    adrp x1, comando               // Carga la página base de 'comando'
+    add x1, x1, :lo12:comando      // Obtener la dirección de 'comando'
+
+    // Escribie 0's en 'num' para limpiarla
+    mov x2, 50
+    mov w5, #0  
+
+    reset_loop:
+        strb w5, [x1], 1      // Escribir 0 en cada byte y avanzar la dirección
+        sub x2, x2, 1         // Decrementar el contador de bytes
+        cbnz x2, reset_loop    // Repetir hasta que X1 llegue a cero               
+              
+    ret
+
 posicionCelda:
     // row-major
     
@@ -334,7 +349,7 @@ verifyParam:
         beq retornar_numero         // Si es igual, salta a retornar_numero
 
         // valida que sean solo numeros
-        strb w20, [x10], 1
+        strb w20, [x10], 1          //guarda w20 en num
         add x4, x4, 1               // Numero de caracteres leidos se aumenta
         b analizar_numero
 
@@ -533,11 +548,12 @@ _start:
     
     insert_command:
         bl printCeldas
+        bl cleanCommand                     //limpia el comando anterior para ingresar el nuevo por consola
         bl getCommand
 
         bl verifyCommand                    // verifica el tipo de comando ingresado
         adr x5, tipo_comando
-        strb w4, [x5]
+        strb w4, [x5]                       //w4 es lo que regresa verifyCommand
         
         bl cleanParam                       // limpia la variable num que que contiene los valores del parametro
         
@@ -549,11 +565,18 @@ _start:
         bl verificarPalabraIntermedia
         bl cleanParam
 
+        cmp w4, 0                           //si no hay palabra intermedia(caso para el not logico)
+        beq concluir
+
         // segundo parametro
         bl verifyParam
         ldr x8, =param2
         ldr x9, =posicion_param2
         bl paramNumero                      //aqui es donde se guardan el parametro en x8 y calcula posicion del parametro
+
+        
+
+    concluir:
 
         adr x0, tipo_comando
         ldrb w2, [x0]
@@ -570,6 +593,14 @@ _start:
         beq concluir_division
         cmp w2, 6
         beq concluir_potenciar
+        cmp w2, 7
+        beq concluir_ologico
+        cmp w2, 8
+        beq concluir_ylogico
+        cmp w2, 9
+        beq concluir_oxlogico
+        cmp w2, 10
+        beq concluir_nologico
         cmp w2, 11
         beq concluir_llenar
         cmp w2, 15
@@ -677,7 +708,62 @@ _start:
         str x2, [x10]               //almacena el resultado en v_retorno
 
         B exit_programa
+    
+    concluir_ologico:
 
+        ldr x8, =param1             //contiene el primer valor entero
+        ldr x9, [x8]
+        ldr x11, =param2            //contiene el segundo valor entero
+        ldr x10, [x11]
+
+        orr x9, x9, x10
+
+        ldr x10, =v_retorno
+        str x9, [x10]               //almacena el resultado en v_retorno
+
+        B exit_programa
+
+    concluir_oxlogico: //XOR
+
+        ldr x8, =param1             //contiene el primer valor entero
+        ldr x9, [x8]
+        ldr x11, =param2            //contiene el segundo valor entero
+        ldr x10, [x11]
+
+        eor x9, x9, x10             //XOR
+
+        ldr x10, =v_retorno
+        str x9, [x10]               //almacena el resultado en v_retorno
+
+        B exit_programa
+
+    concluir_ylogico:
+
+        ldr x8, =param1             //contiene el primer valor entero
+        ldr x9, [x8]
+        ldr x11, =param2            //contiene el segundo valor entero
+        ldr x10, [x11]
+
+        and x9, x9, x10
+
+        ldr x10, =v_retorno
+        str x9, [x10]               //almacena el resultado en v_retorno
+
+        B exit_programa
+
+    concluir_nologico: //NOT
+
+        ldr x8, =param1             //contiene el primer valor entero
+        ldr x9, [x8]
+
+        mvn x9, x9                  //NOT
+
+        ldr x10, =v_retorno
+        str x9, [x10]               //almacena el resultado en v_retorno
+
+        B exit_programa
+
+    
     concluir_llenar:
 
         adr x2, posicion_param1
