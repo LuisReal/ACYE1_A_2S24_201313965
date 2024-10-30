@@ -256,6 +256,42 @@ cleanCommand:
               
     ret
 
+cleanPosicion_params:
+    adr x1, param1               // Carga la página base de 'param1'
+    // Escribie 0's en 'num' para limpiarla
+    mov x5, #0
+    str x5, [x1]
+                   
+    adr x1, posicion_param1               // Carga la página base de 'posicion_param1'
+    // Escribie 0's en 'num' para limpiarla
+    ldr x5, [x1]
+
+    mov w5, #0             
+    strb w5, [x1]   
+
+    ldr x5, [x1]     
+
+    adr x1, param2               // Carga la página base de 'param2'
+    // Escribie 0's en 'num' para limpiarla
+    mov x5, #0                
+    str x5, [x1]
+    
+
+    adr x1, posicion_param2               // Carga la página base de 'posicion_param2'
+    // Escribie 0's en 'num' para limpiarla
+    mov w5, #0         
+    strb w5, [x1], 1
+    strb w5, [x1]               
+
+
+    ldr x1, =fila64               // Carga la página base de 'fila64'
+    //add x1, x1, :lo12:fila64      // Obtener la dirección de 'fila64'
+
+    // Escribie 0's en 'num' para limpiarla
+    str x5, [x1]               
+    
+    ret
+
 posicionCelda:
     // row-major
     
@@ -440,6 +476,7 @@ paramNumero:
         ldr x8, [sp], #16           // Carga x8(param1 o param2) desde la pila y luego incrementa el puntero de la pila (fer)
         str x5, [x9]                // x9 = posicion_param1  o posicion_param2 (fer)
 
+        //En dado caso se ingrese una celda para obtener su valor ej: SUMA A01 Y A02
         adrp x25, tablero
         add  x25, x25, :lo12:tablero    // Sumar el offset para la dirección completa
         ldr  x2, [x25, x5, lsl 3]       // Se carga el valor que tenga nuestra matriz en dicha posicion, en el registro x2
@@ -466,7 +503,7 @@ paramNumero:
 posicionACelda:
 
     mov x22, 11
-    sdiv x21, x20, x22
+    sdiv x21, x20, x22          //x20 = posicion_param1
 
     // multiplicar el cociente por el divisor
     mul x23, x21, x22       // x23 = x21 * x22
@@ -478,7 +515,7 @@ posicionACelda:
     add w1, w24, 65
     // mov w1, w21
     adr x5, msgIngresarValor
-    strb w1, [x5, #23]
+    strb w1, [x5, #23]      //guarda w1 en el primer @ de "Ingresar un valor para @@@:"
 
     // Fila
     add x21, x21, 1
@@ -486,7 +523,7 @@ posicionACelda:
     sdiv x19, x21, x22
 
     add w1, w19, 48
-    strb w1, [x5, #24]
+    strb w1, [x5, #24]      //guarda w1 en el segundo @ de "Ingresar un valor para @@@:"
 
     // multiplicar el cociente por el divisor
     mul x23, x19, x22       // x23 = x21 * x22
@@ -494,7 +531,7 @@ posicionACelda:
     // Restar el producto del dividendo para obtener el residuo
     sub x24, x21, x23       // x24 = x20 - (x21 * x22) (residuo)
     add w1, w24, 48
-    strb w1, [x5, #25]
+    strb w1, [x5, #25]      //guarda w1 en el tercer @ de "Ingresar un valor para @@@:"
 
     ret
 
@@ -508,10 +545,10 @@ llenarFilaColumna:
 
     loop_llenar:
         adr x4, posicion_param1
-        ldr w20, [x4]
+        ldr w20, [x4]                //0
         
         stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
-        bl posicionACelda
+        bl posicionACelda            // aqui se usa w20 = x20
         ldp x29, x30, [SP], 16       // Restaurar x29 y x30 después de la llamada
 
         stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
@@ -529,12 +566,40 @@ llenarFilaColumna:
 
         adr x4, posicion_param1
         ldr w20, [x4]
+        add w20, w20, w27           //w27 = 1 o 11 al inicio
+        strb w20, [x4]
+
+        sub x3, x3, 1               //x3 = posicion_param2 - posicion_param1
+        cmp x3, 0
+        bge loop_llenar
+    ret
+
+
+getValues:      //obtiene  los valores almacenados de la celda en el rango especificado
+
+    mov x10, 0                          //contendra el resultado solo de la suma total
+
+    adrp x25, tablero
+    add  x25, x25, :lo12:tablero    // Sumar el offset para la dirección completa
+
+    loop_get:
+        adr x4, posicion_param1
+        ldrb w20, [x4]
+
+        //En dado caso se ingrese una celda para obtener su valor ej: SUMA A01 Y A02
+        ldr  x2, [x25, x20, lsl 3]    // Se carga el valor que tenga nuestra matriz en dicha posicion, en el registro x2
+        //str x2, [x8]                 //x8 = param1 o  param2
+
+        add x10, x10, x2             //x10 = contendra el resultado solo de la suma total de los valores
+
+        adr x4, posicion_param1
+        ldrb w20, [x4]
         add w20, w20, w27
         strb w20, [x4]
 
-        sub x3, x3, 1
+        sub x3, x3, 1               //x3 = posicion_param2 - posicion_param1 que es igual a cantidad de veces que se repite el bucle
         cmp x3, 0
-        bge loop_llenar
+        bge loop_get
     ret
 //---------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------
@@ -558,6 +623,8 @@ _start:
         bl cleanParam                       // limpia la variable num que que contiene los valores del parametro
         
         bl verifyParam                      // verifica el tipo de parametro (w4 Numero=1, Celda=2 o retorno=3)
+        bl cleanPosicion_params             //resetea posicion_param1 y posicion_param2
+
         ldr x8, =param1                     //contendra el valor ingresado
         ldr x9, =posicion_param1
         bl paramNumero                      //aqui es donde se guardan el parametro en x8 y calcula posicion del parametro
@@ -603,6 +670,8 @@ _start:
         beq concluir_nologico
         cmp w2, 11
         beq concluir_llenar
+        cmp w2, 12
+        beq concluir_promedio
         cmp w2, 15
         beq concluir_importar
         
@@ -766,11 +835,12 @@ _start:
     
     concluir_llenar:
 
-        adr x2, posicion_param1
-        ldrb w0, [x2]
+        adr x2, posicion_param1     
+        ldrb w0, [x2]               //0
         adr x3, posicion_param2
-        ldrb w1, [x3]
-        sub x3, x1, x0
+        ldrb w1, [x3]               //22
+        sub x3, x1, x0              //22
+        
         cmp x3, 0
         bgt llenar_fila_positivo
         cmp x3, 0
@@ -797,12 +867,12 @@ _start:
 
         llenar_columna_positivo:
             mov x0, 11
-            sdiv x4, x3, x0
+            sdiv x4, x3, x0       //x4=2
             // multiplicar el cociente por el divisor
-            mul x5, x4, x0       // x5 = x4 * x0
+            mul x5, x4, x0     //x5=22  // x5 = x4 * x0
             // Restar el producto del dividendo para obtener el residuo
-            sub x6, x3, x5       // x6 = x3 - (x4 * x0) (residuo)
-            mov x3, x4
+            sub x6, x3, x5     //x6=0  // x6 = x3 - (x4 * x0) (residuo)
+            mov x3, x4         //x3=2 
             cmp x6, 0
             bne exit
 
@@ -812,7 +882,7 @@ _start:
 
         llenar_columna_negativo:
             mov x0, 11
-            sdiv x4, x3, x0
+            sdiv x4, x3, x0         
             // multiplicar el cociente por el divisor
             mul x5, x4, x0       // x5 = x4 * x0
             // Restar el producto del dividendo para obtener el residuo
@@ -825,6 +895,62 @@ _start:
             mov w27, -11
             bl llenarFilaColumna
             b exit_programa
+
+    concluir_promedio:
+
+        adr x2, posicion_param1  //0
+        ldrb w0, [x2]
+        adr x3, posicion_param2     //22
+        ldrb w1, [x3]
+        sub x3, x1, x0          //x3= posicion_param2 - posicion_param1 (x3=22)
+
+        //mov x1, 0
+        //mov x1, x3              //x1 = numero de valores
+
+        cmp x3, 0
+        bgt fila_positivo
+        //cmp x3, 0
+        //blt fila_negativo
+        b exit_programa
+
+        fila_positivo:
+
+            cmp x3, 10
+            bgt columna_positivo
+
+            mov w27, 1
+            bl getValues
+            udiv x10, x10, x1
+
+            ldr x1, =v_retorno
+            str x10, [x1]               //almacena el resultado en v_retorno
+            b exit_programa
+
+
+        columna_positivo:
+            mov x0, 11
+            sdiv x4, x3, x0             
+            // multiplicar el cociente por el divisor
+            mul x5, x4, x0       // x5 = x4 * x0
+            // Restar el producto del dividendo para obtener el residuo
+            sub x6, x3, x5       // x6 = x3 - (x4 * x0) (residuo)
+            mov x3, x4          //x3 = 2
+            mov x1, x3
+            cmp x6, 0
+            bne exit
+
+            mov w27, 11
+            bl getValues
+            add x1, x1, 1
+            udiv x10, x10, x1   //x1 = numero de valores
+
+            ldr x1, =v_retorno
+            str x10, [x1]               //almacena el resultado en v_retorno
+
+            b exit_programa
+
+
+        
 
     concluir_importar:
         //print param1, 5
