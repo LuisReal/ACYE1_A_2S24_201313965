@@ -780,12 +780,16 @@ _start:
 
         adr x5, tipo_comando
         ldrb w2, [x5]
+        
 
         bl verificarPalabraIntermedia
         bl cleanParam
 
         cmp w4, 0                           //si la palabra intermedia es 0 = nada
         beq concluir
+
+        adr x5, tipo_comando
+        ldrb w4, [x5]
 
         // segundo parametro
         bl verifyParam
