@@ -656,6 +656,59 @@ mover:
     cmp x3, 0
     bgt loop_getMin
     ret
+
+getMaxValue:      //obtiene el valor maximo del rango especificado
+
+    mov x10, 0                          //contendra el resultado solo del valor maximo
+
+    adrp x25, tablero
+    add  x25, x25, :lo12:tablero    // Sumar el offset para la dirección completa
+
+    adr x4, posicion_param1
+    ldrb w20, [x4]
+
+    //En dado caso se ingrese una celda para obtener su valor ej: SUMA A01 Y A02
+    ldr  x2, [x25, x20, lsl 3]    // Se carga el valor que tenga nuestra matriz en dicha posicion, en el registro x2
+    mov x10, x2
+
+    add w20, w20, w27
+    strb w20, [x4]
+
+loop_getMax:
+    adr x4, posicion_param1
+    ldrb w20, [x4]
+
+    //En dado caso se ingrese una celda para obtener su valor ej: SUMA A01 Y A02
+    ldr  x2, [x25, x20, lsl 3]    // Se carga el valor que tenga nuestra matriz en dicha posicion, en el registro x2
+    //str x2, [x8]                 //x8 = param1 o  param2
+
+    cmp x10,x2
+    //stp x29, x30, [SP, -16]!     // Guardar x29 y x30 antes de la llamada
+    ble mover2
+    //ldp x29, x30, [SP], 16       // Restaurar x29 y x30 después de la llamada
+                
+    adr x4, posicion_param1
+    ldrb w20, [x4]
+    add w20, w20, w27
+    strb w20, [x4]
+
+    sub x3, x3, 1               //x3 = posicion_param2 - posicion_param1 que es igual a cantidad de veces que se repite el bucle
+    cmp x3, 0
+    bgt loop_getMax
+
+    ret
+
+mover2:
+    mov x10, x2
+    adr x4, posicion_param1
+    ldrb w20, [x4]
+    add w20, w20, w27
+    strb w20, [x4]
+
+    sub x3, x3, 1               //x3 = posicion_param2 - posicion_param1 que es igual a cantidad de veces que se repite el bucle
+    cmp x3, 0
+    bgt loop_getMax
+    ret
        
 //---------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------
@@ -730,6 +783,8 @@ _start:
         beq concluir_promedio
         cmp w2, 13
         beq concluir_minimo
+        cmp w2, 14
+        beq concluir_maximo
         cmp w2, 15
         beq concluir_importar
         
@@ -1103,6 +1158,82 @@ _start:
             neg x3, x3
             mov w27, -11
             bl getMinValue      //x10 aqui se usa
+            
+
+            ldr x1, =v_retorno
+            str x10, [x1]       //x10 = el valor minimo
+            b exit_programa
+
+    concluir_maximo:
+
+        adr x2, posicion_param1  //0
+        ldrb w0, [x2]
+        adr x3, posicion_param2     //22
+        ldrb w1, [x3]
+        sub x3, x1, x0          //x3= posicion_param2 - posicion_param1 (x3=22)
+
+        cmp x3, 0
+        bgt fila_max_positivo
+        cmp x3, 0
+        blt fila_max_negativo
+        b exit_programa
+
+        fila_max_positivo:
+
+            cmp x3, 10
+            bgt columna_max_positivo
+
+            mov w27, 1
+            bl getMaxValue
+                        
+            b exit_programa
+
+        fila_max_negativo:
+            cmp x3, -10
+            blt columna_max_negativo
+
+            neg x3, x3
+            mov w27, -1
+            bl getMaxValue
+                  
+            b exit_programa
+
+        columna_max_positivo:
+            mov x0, 11
+            sdiv x4, x3, x0             
+            // multiplicar el cociente por el divisor
+            mul x5, x4, x0       // x5 = x4 * x0
+            // Restar el producto del dividendo para obtener el residuo
+            sub x6, x3, x5       // x6 = x3 - (x4 * x0) (residuo)
+            mov x3, x4          //x3 = 2
+            
+            cmp x6, 0
+            bne exit
+
+            mov w27, 11
+            bl getMaxValue
+            
+
+            ldr x1, =v_retorno
+            str x10, [x1]               //almacena el resultado en v_retorno
+
+            b exit_programa
+
+        columna_max_negativo:
+            mov x0, 11
+            sdiv x4, x3, x0         
+            // multiplicar el cociente por el divisor
+            mul x5, x4, x0       // x5 = x4 * x0
+            // Restar el producto del dividendo para obtener el residuo
+            sub x6, x3, x5       // x6 = x3 - (x4 * x0) (residuo)
+            mov x3, x4
+            
+            cmp x6, 0
+            bne exit
+
+            neg x3, x3
+            mov w27, -11
+            bl getMaxValue      //x10 aqui se usa
             
 
             ldr x1, =v_retorno
