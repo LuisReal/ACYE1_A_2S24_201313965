@@ -116,6 +116,9 @@ verifyCommand:
 
     multiplicacion:
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
+        cmp w20, #'I'           
+        beq valor_minimo          // Si no es igual, salta a end_verificar
+        
         cmp w20, #'U'           
         bne end_verify          // Si no es igual, salta a end_verificar
 
@@ -501,7 +504,55 @@ verifyCommand:
 
         mov w4, 12              // (Comando Guardar encontrado)
         B end_verify            // Si no encuentra ningun comando marcar error
-        
+    
+    valor_minimo:
+        ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
+        cmp w20, #'N'          // Compara el carácter con 'U'
+        bne end_verify           // Si no es igual, salta a end_verify
+
+        ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
+        cmp w20, #'I'          // Compara el carácter con 'U'
+        bne end_verify           // Si no es igual, salta a end_verify
+
+        ldrb w20, [x0], #1
+        cmp w20, #'M'          // Compara el carácter con 'A'
+        bne end_verify           // Si es igual, salta a end_verify
+
+        ldrb w20, [x0], #1
+        cmp w20, #'O'          // Compara el carácter con 'A'
+        bne end_verify           // Si es igual, salta a end_verify
+
+        ldrb w20, [x0], #1
+        cmp w20, #' '          // Compara el carácter con ' '
+        bne end_verify           // Si es igual, salta a end_verify
+
+        ldrb w20, [x0], 1
+        cmp w20, #'D'          // Compara el carácter con ' '
+        bne end_verify           // Si es igual, salta a end_verify
+
+        ldrb w20, [x0], 1
+        cmp w20, #'E'          // Compara el carácter con ' '
+        bne end_verify           // Si es igual, salta a end_verify
+
+        ldrb w20, [x0], 1
+        cmp w20, #'S'          // Compara el carácter con ' '
+        bne end_verify           // Si es igual, salta a end_verify
+
+        ldrb w20, [x0], 1
+        cmp w20, #'D'          // Compara el carácter con ' '
+        bne end_verify           // Si es igual, salta a end_verify
+
+        ldrb w20, [x0], 1
+        cmp w20, #'E'          // Compara el carácter con ' '
+        bne end_verify           // Si es igual, salta a end_verify
+
+        ldrb w20, [x0], #1
+        cmp w20, #' '          // Compara el carácter con ' '
+        bne end_verify           // Si es igual, salta a end_verify
+
+        MOV w4, 13           // w4=13 (Comando Importar encontrado)
+        B end_verify        // Si no encuentra ningun comando marcar error
+
     importar:
         ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
         cmp w20, #'M'          // Compara el carácter con 'U'
