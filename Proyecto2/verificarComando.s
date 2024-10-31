@@ -36,36 +36,41 @@ verifyCommand:
     cmp w20, #'I'               // Compara el carácter con 'I'
     beq importar                // Si es igual, salta a importar
     
-    b end_verify                // Si no encuentra ningun comando finaliza verificacion
+    b error_verify                // Si no encuentra ningun comando finaliza verificacion
     
+    error_verify:
+        print msgErrorComando, lenErrorComando
+        input
+        b insert_command
+
     guardar:
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
         cmp w20, #'U'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'A'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'R'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
         
         ldrb w20, [x0], 1
         cmp w20, #'D'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'A'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'R'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #' '           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         mov w4, 1               // (Comando Guardar encontrado)
         B end_verify     // Si no encuentra ningun comando marcar error
@@ -73,19 +78,19 @@ verifyCommand:
     suma:
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
         cmp w20, #'U'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'M'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'A'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #' '           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         mov w4, 2               // (Comando Guardar encontrado)
         B end_verify     // Si no encuentra ningun comando marcar error
@@ -93,23 +98,23 @@ verifyCommand:
     resta:
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
         cmp w20, #'E'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'S'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'T'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'A'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #' '           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         mov w4, 3               // (Comando Guardar encontrado)
         B end_verify            // Si no encuentra ningun comando marcar error
@@ -117,65 +122,65 @@ verifyCommand:
     multiplicacion:
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
         cmp w20, #'I'           
-        beq valor_minimo          // Si no es igual, salta a end_verificar
+        beq valor_minimo          // Si no es igual, salta a error_verify
         
         cmp w20, #'A'          // Compara el carácter con 'U'
         beq valor_maximo          // Si no es igual, salta a end_verify
 
         cmp w20, #'U'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'L'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'T'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'I'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
         cmp w20, #'P'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'L'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'I'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'C'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
         cmp w20, #'A'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'C'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'I'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'O'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'N'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #' '           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         mov w4, 4               // (Comando Guardar encontrado)
         B end_verify            // Si no encuentra ningun comando marcar error
@@ -183,31 +188,31 @@ verifyCommand:
     division:
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
         cmp w20, #'I'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'V'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'I'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'D'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'I'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'R'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #' '           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         mov w4, 5               // (Comando Guardar encontrado)
         B end_verify            // Si no encuentra ningun comando marcar error
@@ -219,39 +224,39 @@ verifyCommand:
         beq promedio 
         
         cmp w20, #'O'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'T'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'E'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
         
         ldrb w20, [x0], 1
         cmp w20, #'N'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'C'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'I'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'A'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'R'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #' '           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         mov w4, 6               // (Comando Guardar encontrado)
         B end_verify     // Si no encuentra ningun comando marcar error
@@ -269,31 +274,31 @@ verifyCommand:
 
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
         cmp w20, #'L'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'O'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'G'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
         
         ldrb w20, [x0], 1
         cmp w20, #'I'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'C'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'O'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #' '           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         mov w4, 7               // (Comando Guardar encontrado)
         B end_verify     // Si no encuentra ningun comando marcar error
@@ -301,31 +306,31 @@ verifyCommand:
     ylogico:
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
         cmp w20, #'L'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'O'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'G'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
         
         ldrb w20, [x0], 1
         cmp w20, #'I'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'C'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'O'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #' '           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         mov w4, 8               // (Comando Guardar encontrado)
         B end_verify     // Si no encuentra ningun comando marcar error
@@ -335,31 +340,31 @@ verifyCommand:
 
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
         cmp w20, #'L'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'O'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'G'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
         
         ldrb w20, [x0], 1
         cmp w20, #'I'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'C'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'O'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #' '           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         mov w4, 9               // (Comando Guardar encontrado)
         B end_verify     // Si no encuentra ningun comando marcar error
@@ -367,35 +372,35 @@ verifyCommand:
     nologico:
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
         cmp w20, #'O'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
         cmp w20, #'L'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'O'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'G'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
         
         ldrb w20, [x0], 1
         cmp w20, #'I'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'C'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'O'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #' '           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         mov w4, 10               // (Comando Guardar encontrado)
         B end_verify     // Si no encuentra ningun comando marcar error
@@ -403,51 +408,51 @@ verifyCommand:
     llenar:
         ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
         cmp w20, #'L'          // Compara el carácter con 'U'
-        bne end_verify           // Si no es igual, salta a end_verify
+        bne error_verify           // Si no es igual, salta a end_verify
 
         ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
         cmp w20, #'E'          // Compara el carácter con 'U'
-        bne end_verify           // Si no es igual, salta a end_verify
+        bne error_verify           // Si no es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'N'          // Compara el carácter con 'A'
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'A'          // Compara el carácter con 'A'
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'R'          // Compara el carácter con 'R'
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
         
         ldrb w20, [x0], #1
         cmp w20, #' '          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'D'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'E'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'S'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'D'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'E'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #' '          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         mov w4, 11   // w4=11 (Comando Llenar encontrado)
         b end_verify     // Si no encuentra ningun comando marcar error
@@ -455,55 +460,55 @@ verifyCommand:
     promedio:
         ldrb w20, [x0], 1       // Se sigue avanzando en el buffer (comando)
         cmp w20, #'O'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'M'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'E'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'D'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'I'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'O'           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #' '           
-        bne end_verify          // Si no es igual, salta a end_verificar
+        bne error_verify          // Si no es igual, salta a error_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'D'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'E'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'S'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'D'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'E'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #' '          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         mov w4, 12              // (Comando Guardar encontrado)
         B end_verify            // Si no encuentra ningun comando marcar error
@@ -511,47 +516,47 @@ verifyCommand:
     valor_minimo:
         ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
         cmp w20, #'N'          // Compara el carácter con 'U'
-        bne end_verify           // Si no es igual, salta a end_verify
+        bne error_verify           // Si no es igual, salta a end_verify
 
         ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
         cmp w20, #'I'          // Compara el carácter con 'U'
-        bne end_verify           // Si no es igual, salta a end_verify
+        bne error_verify           // Si no es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'M'          // Compara el carácter con 'A'
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'O'          // Compara el carácter con 'A'
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #' '          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'D'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'E'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'S'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'D'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'E'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #' '          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         MOV w4, 13           // w4=13 (Comando Importar encontrado)
         B end_verify        // Si no encuentra ningun comando marcar error
@@ -559,47 +564,47 @@ verifyCommand:
     valor_maximo:
         ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
         cmp w20, #'X'          // Compara el carácter con 'N'
-        bne end_verify           // Si no es igual, salta a end_verify
+        bne error_verify           // Si no es igual, salta a end_verify
 
         ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
         cmp w20, #'I'          // Compara el carácter con 'U'
-        bne end_verify           // Si no es igual, salta a end_verify
+        bne error_verify           // Si no es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'M'          // Compara el carácter con 'A'
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'O'          // Compara el carácter con 'A'
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #' '          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'D'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'E'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'S'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'D'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], 1
         cmp w20, #'E'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #' '          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         MOV w4, 14           // w4=13 (Comando Importar encontrado)
         B end_verify        // Si no encuentra ningun comando marcar error
@@ -607,35 +612,35 @@ verifyCommand:
     importar:
         ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
         cmp w20, #'M'          // Compara el carácter con 'U'
-        bne end_verify           // Si no es igual, salta a end_verify
+        bne error_verify           // Si no es igual, salta a end_verify
 
         ldrb w20, [x0], #1  // Se sigue avanzando en el buffer (comando)
         cmp w20, #'P'          // Compara el carácter con 'U'
-        bne end_verify           // Si no es igual, salta a end_verify
+        bne error_verify           // Si no es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'O'          // Compara el carácter con 'A'
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'R'          // Compara el carácter con 'A'
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'T'          // Compara el carácter con 'R'
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
         
         ldrb w20, [x0], #1
         cmp w20, #'A'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #'R'          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         ldrb w20, [x0], #1
         cmp w20, #' '          // Compara el carácter con ' '
-        bne end_verify           // Si es igual, salta a end_verify
+        bne error_verify           // Si es igual, salta a end_verify
 
         MOV w4, 15   // w4=15 (Comando Importar encontrado)
         B end_verify     // Si no encuentra ningun comando marcar error

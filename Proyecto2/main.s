@@ -44,6 +44,7 @@
     msgIngresarValor:
         .asciz "Ingresar un valor para @@@:"
         lenMsgIngresarValor = .- msgIngresarValor
+       
 
     row:  
         .asciz "00"
@@ -85,6 +86,24 @@
     errormsg:
         .asciz "ERROR: No se puede dividir entre 0\n"
         lenErrormsg = . - errormsg 
+
+    msgErrorComando:
+        .asciz "ERROR: Comando ingresado no existe"
+        lenErrorComando = .- msgErrorComando
+
+    msgErrorPIntermedia:
+        .asciz "ERROR: Palabra intermedia no existe"
+        lenErrorPIntermedia = .- msgErrorPIntermedia
+
+    msgErrorNoIntermedia:
+        .asciz "ERROR: Palabra intermedia no permitida"
+        lenErrorNoIntermedia = .- msgErrorNoIntermedia
+
+    msgErrorParametro:
+        .asciz "ERROR: El parametro ingresado no es valido"
+        lenErrorParametro = .- msgErrorParametro
+
+     //msgErrorVerify, lenErrorVerify
 
 .bss
 
@@ -324,6 +343,7 @@ posicionCelda:
 verifyParam:
     // retorna en w4, el tipo de parametro
     //w4=1=numero        w4=2=celda
+    mov w5, w4                      //mueve el valor del comando antes de ser modificado por x4
 
     ldr x10, =num                   // Direccion en memoria donde se almacenara el parametro por primera vez
     mov x4, 0                       // x4=tipo de parametro puede ser: Numero, Celda, retorno
@@ -360,7 +380,7 @@ verifyParam:
         blt analizar_archivo_resta  // Si w20 < '0', salta fuera del rango deberia de dar error
 
         cmp w20, #'9'               
-        bgt analizar_archivo_resta  // Si w20 > '9', salta fuera del rango deberia de dar error
+        bgt analizar_archivo_resta  // Si w20 > '9', significa que el segundo caracter es una letra podria ser AA en lugar de A01
         
         // si w20 = 0-9 (numero de fila)
         strb w20, [x10], 1          // Guardar la fila de la celda en num (num = A01,A02, etc)
@@ -396,7 +416,7 @@ verifyParam:
         ldr x10, =num
 
     analizar_archivo:
-        ldrb w20, [x0], #1          // Se carga el siguiente caracter del comando
+        ldrb w20, [x0], #1          // Se carga el siguiente caracter del comando (impares.csv) se vuelve a cargar la primera letra i
         add x4, x4, 1               // Nuevamente se aumenta la cantidad de caracteres leidos
 
         cmp w20, #' '               // Compara w20 con ' ' (65 en ASCII)
@@ -405,9 +425,9 @@ verifyParam:
         beq retonar_archivo         // Si w20 = '\10', salta a retornar archivo
         cbz w20, retonar_archivo    // Si w20 = '\0', salta a retornar archivo
 
-        strb w20, [x10], 1          // Guardar las letras del nombre del archivo.csv
+        strb w20, [x10], 1          //guarda cada letra en num
         add x4, x4, 1               // Numero de caracteres leidos se aumenta
-        b analizar_archivo          // Sigue leyendo las letras del nombre del archivo.csv
+        b analizar_archivo          
 
     retornar_numero:
         mov w4, 1
@@ -423,9 +443,17 @@ verifyParam:
         b v_fin
     
     retonar_archivo:
+        cmp w5, 15              //si el comando NO es IMPORTAR no se acepta parametros AA con doble letra solo tipo A01
+        bne errorParametro
+        //si el comando es IMPORTAR continua
         mov w4, 4
         b v_fin
 
+    errorParametro:
+        print msgErrorParametro, lenErrorParametro
+        input
+        b insert_command
+        
     v_fin:
 
         ret
@@ -738,10 +766,14 @@ _start:
         ldr x9, =posicion_param1
         bl paramNumero                      //aqui es donde se guardan el parametro en x8 y calcula posicion del parametro
 
+
+        adr x5, tipo_comando
+        ldrb w2, [x5]
+
         bl verificarPalabraIntermedia
         bl cleanParam
 
-        cmp w4, 0                           //si no hay palabra intermedia(caso para el not logico)
+        cmp w4, 0                           //si la palabra intermedia es 0 = nada
         beq concluir
 
         // segundo parametro
