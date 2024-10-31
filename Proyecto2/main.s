@@ -392,6 +392,17 @@ verifyParam:
         mov x4, 0                   // Se reinicia las lecturas que se estan haciendo
 
     analizar_numero:
+        cmp w5, 11
+        beq errorParametro
+
+        cmp w5, 12
+        beq errorParametro
+
+        cmp w5, 13
+        beq errorParametro
+
+        cmp w5, 14
+        beq errorParametro
 
         ldrb w20, [x0], 1
 
@@ -453,7 +464,7 @@ verifyParam:
         print msgErrorParametro, lenErrorParametro
         input
         b insert_command
-        
+
     v_fin:
 
         ret
